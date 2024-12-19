@@ -1,0 +1,19 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/light/robocon2025/git-clones/EKF_Localizer/kalman/include",
+      "-I/usr/bin/eigen3",
+      "-std=c++17",
+      "-Wall",
+      "-Wextra",
+      "-c",
+      "-o",
+      "CMakeFiles/EKF_Localizer.dir/src/main.cpp.o",
+      "/home/light/robocon2025/git-clones/EKF_Localizer/src/main.cpp"
+    ],
+    "directory": "/home/light/robocon2025/git-clones/EKF_Localizer/build",
+    "file": "/home/light/robocon2025/git-clones/EKF_Localizer/src/main.cpp",
+    "output": "/home/light/robocon2025/git-clones/EKF_Localizer/build/CMakeFiles/EKF_Localizer.dir/src/main.cpp.o"
+  }
+]
