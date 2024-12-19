@@ -3,7 +3,7 @@
     "arguments": [
       "/usr/bin/c++",
       "-I/home/light/robocon2025/git-clones/EKF_Localizer/kalman/include",
-      "-I/usr/bin/eigen3",
+      "-I/usr/include/eigen3",
       "-std=c++17",
       "-Wall",
       "-Wextra",

@@ -19,7 +19,7 @@ set(SOURCE_FILES
 # Define include directories
 include_directories(
   kalman/include
-  /usr/bin/eigen3
+  /usr/include/eigen3/
 )
 
 #### C-M-j Ivy immediate done. remembre this
