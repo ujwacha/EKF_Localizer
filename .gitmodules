@@ -1,0 +1,3 @@
+[submodule "kalman"]
+	path = kalman
+	url = https://github.com/mherb/kalman.git
