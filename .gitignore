@@ -3,3 +3,7 @@
 /build/
 /src/main.cpp~
 /.cache/
+/src/ImuMeasuremenntModel.hpp~
+/src/OdomMeasurementModel.cpp~
+/src/OdomMeasurementModel.hpp~
+/src/SystemModel.hpp~
