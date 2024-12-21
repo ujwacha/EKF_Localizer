@@ -33,8 +33,6 @@ int main() {
   State state;
   state.setZero();
 
-  std::cout << "THIS" << state.x() << std::endl;
-
   Twist twist;
 
   OdomMeasurementModel odom_model;
@@ -56,10 +54,24 @@ int main() {
   twist.romega() = 3;
 
 
-  for (int i = 0; i < 3000; i++) {
-    state = sys.f(state, twist, 0.01);
-    std::cout << i << "," << state.x() << "," << state.y() << "," << state.theta() << std::endl;
+  for (int i = 0; i < 140; i++) {
+    state = sys.f(state, twist, 0.05);
+
     fs << i << "," << state.x() << "," << state.y() << "," << state.theta() << std::endl;
+
+    if (i  == 70) {
+      std::cout << "OPP" << std::endl;
+      twist.romega() = -3;
+    }
+
+
+    if (i  == 95) {
+      std::cout << "OPP" << std::endl;
+      twist.romega() = 0;
+    }
+
+
+    //    std::cout << i << "," << state.x() << "," << state.y() << "," << state.theta() << std::endl;
   }
 
 
