@@ -53,10 +53,10 @@ int main() {
 
   twist.rvx() = 1;
   twist.rvy() = 2;
-  twist.romega() = 0;
+  twist.romega() = 3;
 
 
-  for (int i = 0; i < 100; i++) {
+  for (int i = 0; i < 300; i++) {
     state = sys.f(state, twist);
     std::cout << i << "," << state.x() << "," << state.y() << "," << state.theta() << std::endl;
     fs << i << "," << state.x() << "," << state.y() << "," << state.theta() << std::endl;
@@ -64,7 +64,6 @@ int main() {
 
 
   // check if this works properly
-  // Note The angle does not wrap around, gotta fix that
   
   
   return 0;

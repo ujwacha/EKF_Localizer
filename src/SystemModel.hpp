@@ -5,6 +5,27 @@
 
 #define PER 0.05f
 
+
+#define F32_PI 3.14159265358979f
+#define F32_PI_2 1.57079632679489f
+#define F32_2_PI 6.28318530717958f
+
+template <typename T>
+T angleClamp(T angle)
+{
+  if (angle > F32_PI)
+    {
+      angle -= F32_2_PI;
+    }
+  else if (angle < (-F32_PI))
+    {
+      angle += F32_2_PI;
+    }
+  return angle;
+}
+
+
+
 namespace Robot {
   template <typename T>
   class State : public Kalman::Vector<T, 8> {
@@ -92,7 +113,7 @@ namespace Robot {
 
       x_.x()  = x.x() + (cos(x.theta()) * u.rvx() - sin(x.theta()) * u.rvy())*PER + 0.5*(PER * PER)*x.ax();
       x_.y()  = x.y() + (sin(x.theta()) * u.rvx() + cos(x.theta()) * u.rvy())*PER + x.ay()*(PER*PER)*0.5f;
-      x_.theta()  = x.theta() + x.omega()*PER;
+      x_.theta()  = angleClamp(x.theta() + x.omega()*PER); // Clamping the angle, hope it won't affect the jacobian
 
       x_.vx() = (cos(x.theta()) * u.rvx() - sin(x.theta()) * u.rvy()) + x.ax()*PER;
       x_.vy() = (sin(x.theta()) * u.rvx() + cos(x.theta()) * u.rvy()) + x.ay()*PER;
