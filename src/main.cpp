@@ -54,11 +54,11 @@ int main() {
   twist.romega() = 3;
 
 
-  for (int i = 0; i < 140; i++) {
+  for (int i = 0; i < 300; i++) {
     state = sys.f(state, twist, 0.05);
 
     fs << i << "," << state.x() << "," << state.y() << "," << state.theta() << std::endl;
-
+    // Should Have Used Case Statement Lol
     if (i  == 70) {
       std::cout << "OPP" << std::endl;
       twist.romega() = -3;
@@ -69,6 +69,28 @@ int main() {
       std::cout << "OPP" << std::endl;
       twist.romega() = 0;
     }
+
+    if (i == 120) {
+      std::cout << "OPP" << std::endl;
+      twist.romega() = 10;
+    }
+
+    if ( i==150 ) {
+      twist.rvx() = 0;
+      twist.rvy() = 0;
+      twist.romega() = 0;
+    }
+
+    if (i==200) {
+      twist.rvx() = 1;
+    }
+
+    if (i==240) {
+      twist.rvx() = 1;
+      twist.rvy() = 2;
+      twist.romega() = 3;
+    }
+
 
 
     //    std::cout << i << "," << state.x() << "," << state.y() << "," << state.theta() << std::endl;

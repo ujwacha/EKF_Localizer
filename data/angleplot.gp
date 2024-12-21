@@ -14,4 +14,6 @@ do for [i=1:n] {
     pause 0.1  # Adjust delay (in seconds) between frames
     
 }
+
+
 pause -1 "Press any key to close the window..."
