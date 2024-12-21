@@ -9,13 +9,9 @@ set datafile separator ","
 n = system("wc -l < data.csv")  # Count the number of lines in the CSV file
 
 do for [i=1:n] {
-    plot "data.csv" using 2:3 every ::1::i with lines title "Locus", \
-         "data.csv" using 2:3 every ::i::i with points pointtype 7 pointsize 1 title sprintf("Frame %d", i)
-    # plot "data.csv" using 1:4 every ::1::i with linespoints title "Angle"
-
+    plot "data.csv" using 1:4 every ::1::i with lines title "Angle"
 
     pause 0.1  # Adjust delay (in seconds) between frames
     
 }
-
 pause -1 "Press any key to close the window..."
