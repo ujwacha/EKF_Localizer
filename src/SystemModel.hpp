@@ -3,7 +3,8 @@
 #include <cmath>
 #include <math.h>
 
-#define PER 0.05f
+// because the variable name is t, I know it's confusing
+#define PER t 
 
 
 #define F32_PI 3.14159265358979f
@@ -108,7 +109,7 @@ namespace Robot {
     }
 
 
-    S f(const S& x, const C& u) const {
+    S f(const S& x, const C& u, const float t = 0.05) const {
       S x_;
 
       x_.x()  = x.x() + (cos(x.theta()) * u.rvx() - sin(x.theta()) * u.rvy())*PER + 0.5*(PER * PER)*x.ax();
@@ -127,7 +128,7 @@ namespace Robot {
 
 protected:
     // Update the Jecobian
-    void updateJacobians(const S &x, const C &u) {
+    void updateJacobians(const S &x, const C &u, const float t = 0.05) {
       // F = df/dx (Jacobian of state transition w.r.t. the state)
       this->F.setZero();
 

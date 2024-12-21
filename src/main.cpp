@@ -56,8 +56,8 @@ int main() {
   twist.romega() = 3;
 
 
-  for (int i = 0; i < 300; i++) {
-    state = sys.f(state, twist);
+  for (int i = 0; i < 3000; i++) {
+    state = sys.f(state, twist, 0.01);
     std::cout << i << "," << state.x() << "," << state.y() << "," << state.theta() << std::endl;
     fs << i << "," << state.x() << "," << state.y() << "," << state.theta() << std::endl;
   }
