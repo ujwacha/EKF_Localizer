@@ -1,14 +1,16 @@
 #include "kalman/Matrix.hpp"
-#include "kalman/LinearizedSystemModel.hpp"
+#include <kalman/LinearizedSystemModel.hpp>
 #include <cmath>
 #include <math.h>
 
 #define PER 0.05f
 
 namespace Robot {
-  template <typename T> class State : public Kalman::Vector<T, 8> {
+  template <typename T>
+  class State : public Kalman::Vector<T, 8> {
   public:
     KALMAN_VECTOR(State, T, 8)
+
 
     //! X-position
     static constexpr size_t X = 0;
@@ -42,15 +44,21 @@ namespace Robot {
     T& ax() { return (*this)[AX]; }
     T& ay() { return (*this)[AY]; }
   };
+}
 
+
+namespace Robot {
 
   template <typename T>
   class Twist : public Kalman::Vector<T, 3>
   {
+  public:
+
+    KALMAN_VECTOR(Twist, T, 3)
     // Velocities
-    static constexpr size_t RVX = 3;
-    static constexpr size_t RVY = 4;
-    static constexpr size_t ROMEGA = 5;
+    static constexpr size_t RVX = 0;
+    static constexpr size_t RVY = 1;
+    static constexpr size_t ROMEGA = 2;
 
     T rvx() const { return (*this)[RVX]; }
     T rvy() const { return (*this)[RVY]; }
@@ -66,6 +74,7 @@ namespace Robot {
   template <typename T,
 	    template <class> class CovarianceBase = Kalman::StandardBase>
   class SystemModel : public Kalman::LinearizedSystemModel<State<T>, Twist<T>, CovarianceBase> {
+  public:
 
     typedef State<T> S ;
     typedef Twist<T> C ;
@@ -95,6 +104,7 @@ namespace Robot {
       return x_;
     }
 
+protected:
     // Update the Jecobian
     void updateJacobians(const S &x, const C &u) {
       // F = df/dx (Jacobian of state transition w.r.t. the state)
