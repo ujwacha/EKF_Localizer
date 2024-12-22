@@ -1,3 +1,6 @@
 [submodule "kalman"]
 	path = kalman
 	url = https://github.com/ujwacha/kalman-1.git
+[submodule "rapidcsv"]
+	path = rapidcsv
+	url = https://github.com/d99kris/rapidcsv.git
