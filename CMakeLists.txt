@@ -20,6 +20,7 @@ set(SOURCE_FILES
 include_directories(
   kalman/include
   /usr/include/eigen3/
+  rapidcsv/src
 )
 
 #### C-M-j Ivy immediate done. remembre this

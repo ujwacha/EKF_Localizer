@@ -1,17 +1,16 @@
 #include <iostream>
-
 #include <iostream>
+#include <random>
+#include <chrono>
 #include <fstream>
+#include <vector>
 
 #include "SystemModel.hpp"
 #include "OdomMeasurementModel.hpp"
 #include "ImuMeasuremenntModel.hpp"
-
 #include "kalman/ExtendedKalmanFilter.hpp"
 
-#include <iostream>
-#include <random>
-#include <chrono>
+#include "rapidcsv.h"
 
 
 
@@ -63,27 +62,57 @@ int main() {
   ekf.init(state);
 
 
+
   twist.rvx() = 1;
   twist.rvy() = 2;
   twist.romega() = 3;
 
+  // Get The CSV File
 
-  for (int i = 0; i < 300; i++) {
-    state = sys.f(state, twist, 0.05);
+  rapidcsv::Document csv("../real_life_dta/robot_data.csv");
 
-    state.x() += SystemNoise*noise(generator);
-    state.y() += SystemNoise*noise(generator);
-    state.theta() += SystemNoise*noise(generator);
-    state.vx() += SystemNoise*noise(generator);
-    state.vy() += SystemNoise*noise(generator);
-    state.ax() += SystemNoise*noise(generator);
-    state.ay() += SystemNoise*noise(generator);
+  std::vector rx = csv.GetColumn<float>(2);
+  std::vector ry = csv.GetColumn<float>(3);
+  std::vector rw = csv.GetColumn<float>(4);
+  std::vector t = csv.GetColumn<float>(1);
+
+  std::vector ox = csv.GetColumn<float>(5);
+  std::vector oy = csv.GetColumn<float>(6);
+  std::vector oth = csv.GetColumn<float>(7);
+  std::vector ovx = csv.GetColumn<float>(8);
+  std::vector ovy = csv.GetColumn<float>(9);
+  std::vector ow = csv.GetColumn<float>(10);
 
 
-    auto x_ekf = ekf.predict(sys, twist, 0.05);
-    auto x_pred = predictor.predict(sys, twist, 0.05);
+  std::vector iy  = csv.GetColumn<float>(13);
+  std::vector iax = csv.GetColumn<float>(14);
+  std::vector iay = csv.GetColumn<float>(15);
 
 
+
+  float time = 0.01;
+
+  for (int i = 0; i < rx.size() ; i++) {
+
+    
+
+    state = sys.f(state, twist, time);
+
+
+
+    // state.x() += SystemNoise*noise(generator);
+    // state.y() += SystemNoise*noise(generator);
+    // state.theta() += SystemNoise*noise(generator);
+    // state.vx() += SystemNoise*noise(generator);
+    // state.vy() += SystemNoise*noise(generator);
+    // state.ax() += SystemNoise*noise(generator);
+    // state.ay() += SystemNoise*noise(generator);
+
+
+    auto x_ekf = ekf.predict(sys, twist, time);
+    auto x_pred = predictor.predict(sys, twist, time);
+    
+    
 
 
         // Odom measurement
@@ -91,15 +120,15 @@ int main() {
             // We can measure the orientation every 5th step
             OdomMeasurement odom = odom_model.h(state);
             // Measurement is affected by noise as well
-            odom.theta() += OdomNoise * noise(generator);
-            odom.omega() += OdomNoise * noise(generator);
-            odom.x() += OdomNoise * noise(generator);
-            odom.y() += OdomNoise * noise(generator);
-            odom.vx() += OdomNoise * noise(generator);
-            odom.vy() += OdomNoise * noise(generator);
+            odom.theta() = oth[i];
+            odom.omega() = ow[i];
+            odom.x() = ox[i];
+            odom.y() = oy[i];
+            odom.vx() = ovx[i];
+            odom.vy() = ovy[i];
 
             // Update EKF
-            x_ekf = ekf.update(odom_model, odom, 0.05);
+            x_ekf = ekf.update(odom_model, odom, time);
             
         }
 
@@ -108,54 +137,26 @@ int main() {
             // We can measure the orientation every 5th step
             ImuMeasurement imu = imu_model.h(state);
             // Measurement is affected by noise as well
-            imu.yaw() += ImuNoise * noise(generator);
-            imu.ax() += ImuNoise * noise(generator);
-            imu.ay() += ImuNoise * noise(generator);
+            imu.yaw() = iy[i];
+            imu.ax() = iax[i];
+            imu.ay() = iay[i];
 
             // Update EKF
-            x_ekf = ekf.update(imu_model, imu, 0.05);
+            x_ekf = ekf.update(imu_model, imu, time);
             
         }
 
 
 
-	fs << i << "," << state.x() << "," << state.y() << "," << state.theta() << "," << x_ekf.x() << "," << x_ekf.y() << "," << x_ekf.theta() << std::endl;
-    // Should Have Used Case Statement Lol
-    if (i  == 70) {
-      std::cout << "OPP" << std::endl;
-      twist.romega() = -3;
-    }
+	fs << i << "," << state.x() << "," << state.y() << ","<< state.theta() << ","
+	   << x_ekf.x() << "," << x_ekf.y() << "," << x_ekf.theta() << ","
+	   << x_pred.x() << "," << x_pred.y() << "," << x_pred.theta() << std::endl;
 
 
-    if (i  == 95) {
-      std::cout << "OPP" << std::endl;
-      twist.romega() = 0;
-    }
+	twist.romega() = rw[i];
+	twist.rvx() = rx[i];
+	twist.rvy() = ry[i];
 
-    if (i == 120) {
-      std::cout << "OPP" << std::endl;
-      twist.romega() = 10;
-    }
-
-    if ( i==150 ) {
-      twist.rvx() = 0;
-      twist.rvy() = 0;
-      twist.romega() = 1;
-    }
-
-    if (i==200) {
-      twist.rvx() = 1;
-    }
-
-    if (i==240) {
-      twist.rvx() = 1;
-      twist.rvy() = 2;
-      twist.romega() = 3;
-    }
-
-
-
-    //    std::cout << i << "," << state.x() << "," << state.y() << "," << state.theta() << std::endl;
   }
 
 
