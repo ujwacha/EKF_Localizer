@@ -9,16 +9,35 @@ set grid
 set datafile separator ","
 
 # Enable multiplot layout
-set multiplot layout 1,2 columns
+# set multiplot layout 2,2 columns
 
 # First plot: Column 3 (Y) vs. Column 2 (X)
-plot "data.csv" using 2:3 with linespoints title "X-Y Data"
+plot "data.csv" using 8:9 with linespoints title "X-Y Data"
+
+pause -1 "Press any key to close the window..."
 
 # Second plot: Column 4 (Angle) vs. Column 1 (Time)
-plot "data.csv" using 1:4 with linespoints title "Angle"
+plot "data.csv" using 1:10 with linespoints title "Angle"
+
+
+
+pause -1 "Press any key to close the window..."
+plot "data.csv" using 5:6 with linespoints title "X-Y Kalman "
+
+pause -1 "Press any key to close the window..."
+plot "data.csv" using 1:7 with linespoints title "Angle Kalman"
 
 # End multiplot
-unset multiplot
+# unset multiplot
+
+pause -1 "Press any key to close the window..."
+plot "data.csv" using 11:12 with linespoints title "Odom"
+
+pause -1 "Press any key to close the window..."
+plot "data.csv" using 1:13 with linespoints title "Odom Angle"
+
+
+
 
 # Pause to keep the window open
 pause -1 "Press any key to close the window..."

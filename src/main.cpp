@@ -10,6 +10,7 @@
 #include "ImuMeasuremenntModel.hpp"
 #include "kalman/ExtendedKalmanFilter.hpp"
 
+#include "kalman/Types.hpp"
 #include "rapidcsv.h"
 
 
@@ -25,6 +26,13 @@ typedef Robot::ImuMeasurement<T> ImuMeasurement;
 
 typedef Robot::OdomMeasurementModel<T> OdomMeasurementModel;
 typedef Robot::ImuMeasurementModel<T> ImuMeasurementModel;
+
+
+template <typename T>
+T degreesToRadians(T degrees) {
+    return degrees * static_cast<T>(M_PI) / static_cast<T>(180);
+}
+
 		 
 
 int main() {
@@ -39,10 +47,28 @@ int main() {
 
   Twist twist;
 
+
   OdomMeasurementModel odom_model;
   ImuMeasurementModel imu_model;
   SystemModel sys;
 
+  Kalman::Covariance<OdomMeasurement> odom_cov;
+  Kalman::Covariance<ImuMeasurement> imu_cov;
+
+  imu_cov(ImuMeasurement::AX, ImuMeasurement::AX) = 2;
+  imu_cov(ImuMeasurement::AY, ImuMeasurement::AY) = 2;
+  imu_cov(ImuMeasurement::YAW, ImuMeasurement::YAW) = 0.1;
+
+
+  odom_cov(OdomMeasurement::X, OdomMeasurement::X) = 5;
+  odom_cov(OdomMeasurement::Y, OdomMeasurement::Y) = 5;
+  odom_cov(OdomMeasurement::THETA, OdomMeasurement::THETA) = 10;
+  odom_cov(OdomMeasurement::VX, OdomMeasurement::VX) = 1;
+  odom_cov(OdomMeasurement::VY, OdomMeasurement::VY) = 1;
+  odom_cov(OdomMeasurement::OMEGA, OdomMeasurement::OMEGA) = 3;
+
+  odom_model.setCovariance(odom_cov);
+  imu_model.setCovariance(imu_cov);
 
   T SystemNoise = 0.03;
   T OdomNoise = 0.1;
@@ -63,9 +89,9 @@ int main() {
 
 
 
-  twist.rvx() = 1;
-  twist.rvy() = 2;
-  twist.romega() = 3;
+  // twist.rvx() = 1;
+  // twist.rvy() = 2;
+  // twist.romega() = 3;
 
   // Get The CSV File
 
@@ -137,7 +163,7 @@ int main() {
             // We can measure the orientation every 5th step
             ImuMeasurement imu = imu_model.h(state);
             // Measurement is affected by noise as well
-            imu.yaw() = iy[i];
+            imu.yaw() = degreesToRadians(iy[i]);
             imu.ax() = iax[i];
             imu.ay() = iay[i];
 
@@ -150,7 +176,8 @@ int main() {
 
 	fs << i << "," << state.x() << "," << state.y() << ","<< state.theta() << ","
 	   << x_ekf.x() << "," << x_ekf.y() << "," << x_ekf.theta() << ","
-	   << x_pred.x() << "," << x_pred.y() << "," << x_pred.theta() << std::endl;
+	   << x_pred.x() << "," << x_pred.y() << "," << x_pred.theta() 
+	   << "," << ox[i] << "," << oy[i] << "," << oy[i] << std::endl;
 
 
 	twist.romega() = rw[i];
