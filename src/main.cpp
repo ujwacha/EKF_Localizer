@@ -15,7 +15,7 @@
 
 
 
-typedef float T;
+typedef double T;
 
 typedef Robot::State<T> State;
 typedef Robot::Twist<T> Twist;
@@ -30,7 +30,7 @@ typedef Robot::ImuMeasurementModel<T> ImuMeasurementModel;
 
 template <typename T>
 T degreesToRadians(T degrees) {
-    return degrees * static_cast<T>(M_PI) / static_cast<T>(180);
+  return degrees * static_cast<T>(M_PI) / static_cast<T>(180);
 }
 
 		 
@@ -55,31 +55,26 @@ int main() {
   Kalman::Covariance<OdomMeasurement> odom_cov;
   Kalman::Covariance<ImuMeasurement> imu_cov;
 
-  imu_cov(ImuMeasurement::AX, ImuMeasurement::AX) = 2;
-  imu_cov(ImuMeasurement::AY, ImuMeasurement::AY) = 2;
-  imu_cov(ImuMeasurement::YAW, ImuMeasurement::YAW) = 0.1;
+  // imu_cov(ImuMeasurement::AX, ImuMeasurement::AX) = 2;
+  // imu_cov(ImuMeasurement::AY, ImuMeasurement::AY) = 2;
+  // imu_cov(ImuMeasurement::YAW, ImuMeasurement::YAW) = 0.1;
 
 
-  odom_cov(OdomMeasurement::X, OdomMeasurement::X) = 5;
-  odom_cov(OdomMeasurement::Y, OdomMeasurement::Y) = 5;
-  odom_cov(OdomMeasurement::THETA, OdomMeasurement::THETA) = 10;
-  odom_cov(OdomMeasurement::VX, OdomMeasurement::VX) = 1;
-  odom_cov(OdomMeasurement::VY, OdomMeasurement::VY) = 1;
-  odom_cov(OdomMeasurement::OMEGA, OdomMeasurement::OMEGA) = 3;
+  // odom_cov(OdomMeasurement::X, OdomMeasurement::X) = 5;
+  // odom_cov(OdomMeasurement::Y, OdomMeasurement::Y) = 5;
+  // odom_cov(OdomMeasurement::THETA, OdomMeasurement::THETA) = 10;
+  // odom_cov(OdomMeasurement::VX, OdomMeasurement::VX) = 1;
+  // odom_cov(OdomMeasurement::VY, OdomMeasurement::VY) = 1;
+  // odom_cov(OdomMeasurement::OMEGA, OdomMeasurement::OMEGA) = 3;
 
-  odom_model.setCovariance(odom_cov);
-  imu_model.setCovariance(imu_cov);
+  // odom_model.setCovariance(odom_cov);
+  // imu_model.setCovariance(imu_cov);
 
-  T SystemNoise = 0.03;
-  T OdomNoise = 0.1;
-  T ImuNoise = 0.06;
-    
+  /// Set Covariance Of State Model
 
-      // Random number generation (for noise simulation)
-  std::default_random_engine generator;
-  generator.seed( std::chrono::system_clock::now().time_since_epoch().count() );
-  std::normal_distribution<T> noise(0, 1);
-  
+
+
+ 
  
   Kalman::ExtendedKalmanFilter<State> predictor;
   Kalman::ExtendedKalmanFilter<State> ekf;
@@ -122,67 +117,54 @@ int main() {
 
     
 
-    state = sys.f(state, twist, time);
-
-
-
-    // state.x() += SystemNoise*noise(generator);
-    // state.y() += SystemNoise*noise(generator);
-    // state.theta() += SystemNoise*noise(generator);
-    // state.vx() += SystemNoise*noise(generator);
-    // state.vy() += SystemNoise*noise(generator);
-    // state.ax() += SystemNoise*noise(generator);
-    // state.ay() += SystemNoise*noise(generator);
-
+    // state = sys.f(state, twist, time);
 
     auto x_ekf = ekf.predict(sys, twist, time);
     auto x_pred = predictor.predict(sys, twist, time);
-    
-    
 
 
-        // Odom measurement
-        {
-            // We can measure the orientation every 5th step
-            OdomMeasurement odom = odom_model.h(state);
-            // Measurement is affected by noise as well
-            odom.theta() = oth[i];
-            odom.omega() = ow[i];
-            odom.x() = ox[i];
-            odom.y() = oy[i];
-            odom.vx() = ovx[i];
-            odom.vy() = ovy[i];
-
-            // Update EKF
-            x_ekf = ekf.update(odom_model, odom, time);
+    // Odom measurement
+    {
+      // We can measure the orientation every 5th step
+      OdomMeasurement odom;
+      // Measurement is affected by noise as well
+      odom.theta() = oth[i];
+      odom.omega() = ow[i];
+      odom.x() = ox[i];
+      odom.y() = oy[i];
+      odom.vx() = ovx[i];
+      odom.vy() = ovy[i];
+      
+      // Update EKF
+      x_ekf = ekf.update(odom_model, odom, time);
             
-        }
+    }
 
-	// Imu Measurement
-        {
-            // We can measure the orientation every 5th step
-            ImuMeasurement imu = imu_model.h(state);
-            // Measurement is affected by noise as well
-            imu.yaw() = degreesToRadians(iy[i]);
-            imu.ax() = iax[i];
-            imu.ay() = iay[i];
+    // Imu Measurement
+    {
+      // We can measure the orientation every 5th step
+      ImuMeasurement imu;
+      // Measurement is affected by noise as well
+      imu.yaw() = degreesToRadians(iy[i]);
+      imu.ax() = iax[i];
+      imu.ay() = iay[i];
 
-            // Update EKF
-            x_ekf = ekf.update(imu_model, imu, time);
+      // Update EKF
+      x_ekf = ekf.update(imu_model, imu, time);
             
-        }
+    }
 
 
 
-	fs << i << "," << state.x() << "," << state.y() << ","<< state.theta() << ","
-	   << x_ekf.x() << "," << x_ekf.y() << "," << x_ekf.theta() << ","
-	   << x_pred.x() << "," << x_pred.y() << "," << x_pred.theta() 
-	   << "," << ox[i] << "," << oy[i] << "," << oy[i] << std::endl;
+    fs << i << "," << state.x() << "," << state.y() << ","<< state.theta() << ","
+       << x_ekf.x() << "," << x_ekf.y() << "," << x_ekf.theta() << ","
+       << x_pred.x() << "," << x_pred.y() << "," << x_pred.theta() 
+       << "," << ox[i] << "," << oy[i] << "," << oy[i] << std::endl;
 
 
-	twist.romega() = rw[i];
-	twist.rvx() = rx[i];
-	twist.rvy() = ry[i];
+    twist.romega() = rw[i];
+    twist.rvx() = rx[i];
+    twist.rvy() = ry[i];
 
   }
 

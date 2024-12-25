@@ -141,8 +141,8 @@ protected:
       this->F(S::AX, S::AX) = 1;
       this->F(S::AY, S::AY) = 1;
      
-      float this1 = (-sin(x.theta())*u.rvx() - cos(x.theta())*u.rvy());
-      float this2 = (cos(x.theta())*u.rvx() - sin(x.theta())*u.rvy());
+      double this1 = (-sin(x.theta())*u.rvx() - cos(x.theta())*u.rvy());
+      double this2 = (cos(x.theta())*u.rvx() - sin(x.theta())*u.rvy());
 
       // use things
       this->F(S::X, S::THETA) = PER*this1;
@@ -163,7 +163,25 @@ protected:
 
 
       // W = df/dw (Jacobian of state transition w.r.t. the noise)
-      this->W.setIdentity();
+      // this->W.setIdentity();
+
+      this->W.setZero();
+
+      this->W(C::RVX, S::X) = cos(x.theta()) * PER;
+      this->W(C::RVX, S::Y) = sin(x.theta()) * PER;
+      this->W(C::RVX, S::VX) = cos(x.theta());
+      this->W(C::RVX, S::VY) = sin(x.theta());
+
+      this->W(C::RVY, S::X) = -sin(x.theta()) * PER;
+      this->W(C::RVY, S::Y) = cos(x.theta()) * PER;
+      this->W(C::RVY, S::VX) = -sin(x.theta());
+      this->W(C::RVY, S::VY) = cos(x.theta());
+
+      this->W(C::ROMEGA, S::THETA) = PER; 
+      this->W(C::ROMEGA, S::OMEGA) = 1;
+
+      // W Matrix Has been set
+
       // TODO: more sophisticated noise modelling
       //       i.e. The noise affects the the direction in which we move as
       //       well as the velocity (i.e. the distance we move)

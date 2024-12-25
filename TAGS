@@ -284,16 +284,17 @@ namespace Robot 4,79
     typedef  State<T> S;32,812
     typedef ImuMeasurement<T> M;35,887
 
-src/main.cpp,415
-typedef float T;18,264
-typedef Robot::State<T> State;20,282
-typedef Robot::Twist<T> Twist;21,313
-typedef Robot::SystemModel<T> SystemModel;22,344
-typedef Robot::OdomMeasurement<T> OdomMeasurement;24,388
-typedef Robot::ImuMeasurement<T> ImuMeasurement;25,439
-typedef Robot::OdomMeasurementModel<T> OdomMeasurementModel;27,489
-typedef Robot::ImuMeasurementModel<T> ImuMeasurementModel;28,550
-int main(31,614
+src/main.cpp,442
+typedef float T;18,310
+typedef Robot::State<T> State;20,328
+typedef Robot::Twist<T> Twist;21,359
+typedef Robot::SystemModel<T> SystemModel;22,390
+typedef Robot::OdomMeasurement<T> OdomMeasurement;24,434
+typedef Robot::ImuMeasurement<T> ImuMeasurement;25,485
+typedef Robot::OdomMeasurementModel<T> OdomMeasurementModel;27,535
+typedef Robot::ImuMeasurementModel<T> ImuMeasurementModel;28,596
+T degreesToRadians(32,679
+int main(38,784
 
 src/OdomMeasurementModel.hpp,522
 namespace Robot 7,134

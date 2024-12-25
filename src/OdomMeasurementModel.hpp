@@ -53,6 +53,7 @@ namespace Robot {
       // and do not need to update them dynamically
       //this->H.setIdentity();
 
+      this->H.setZero();
       this->H(M::X, S::X) = 1;
       this->H(M::Y, S::Y) = 1;
       this->H(M::THETA, S::THETA) = 1;
@@ -62,12 +63,13 @@ namespace Robot {
 
       //  this->V.setIdentity();
 
-      this->V(M::X, M::X) = 0.1;
-      this->V(M::Y, M::Y) = 0.1;
-      this->V(M::THETA, M::THETA) = 0.1;
+      this->V.setZero();
+      this->V(M::X, M::X) = 0.7;
+      this->V(M::Y, M::Y) = 0.7;
+      this->V(M::THETA, M::THETA) = 3;
       this->V(M::VX, M::VX) = 0.1;
       this->V(M::VY, M::VY) = 0.1;
-      this->V(M::OMEGA, M::OMEGA) = 0.1;
+      this->V(M::OMEGA, M::OMEGA) = 1;
     }
   
     M h(const S& x) const {

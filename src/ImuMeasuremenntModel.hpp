@@ -41,7 +41,12 @@ namespace Robot {
       this->H(M::AY, S::AY) = 1;
       this->H(M::YAW, S::THETA) = 1;
 
-      this->V.setIdentity();
+      // Seti The Noise Covariance
+      this->V.setZero();
+      this->V(M::AX, M::AX) = 0.1;
+      this->V(M::AY, M::AY) = 0.1;
+      this->V(M::YAW, M::YAW) = 0.1;
+
     }
 
     M h(const S& x) const {

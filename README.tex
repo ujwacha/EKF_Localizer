@@ -1,15 +1,43 @@
-#+TITLE: EKF Localizer
-#+Author: Acharya U
-#+PROPERTY: 
+% Created 2024-12-25 Wed 18:57
+% Intended LaTeX compiler: pdflatex
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{longtable}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{capt-of}
+\usepackage{hyperref}
+\author{Acharya U}
+\date{\today}
+\title{EKF Localizer}
+\hypersetup{
+ pdfauthor={Acharya U},
+ pdftitle={EKF Localizer},
+ pdfkeywords={},
+ pdfsubject={},
+ pdfcreator={Emacs 29.3 (Org mode 9.6.15)}, 
+ pdflang={English}}
+\begin{document}
 
-* About
+\maketitle
+\tableofcontents
+
+
+\section{About}
+\label{sec:orga322f25}
 This is not a final product, this is just for testing.
 
 This program does not try to filter on live data, It will just try to filter out data from already recorded data. 
 
 Another Repo will created for the final result, with a proper and fun name
 
-* State Vector and Control Vector
+\section{State Vector and Control Vector}
+\label{sec:orgd80469c}
 The State Vector  looks like this
 
 \begin{math}
@@ -26,7 +54,7 @@ a_y \\
 \end{bmatrix}
 \end{math}
 
-$\theta$ and $\omega$ refer to the yaw and yaw velosity respectively.
+\(\theta\) and \(\omega\) refer to the yaw and yaw velosity respectively.
 
 The control Vector is a Twist message from ROS2, as we are working in 2D, the vector looks like this, This message tells robot to make velocities according to it's relative axis
 
@@ -41,13 +69,12 @@ v_{ry} \\
 
 
 
-* State Transition Function
+\section{State Transition Function}
+\label{sec:orgac6f54d}
 The state Transition Matrix Looks Like this
 \[  \vec{X_{t+1}} = g\left( \vec{X_t}, \vec{U_t} \right )  \]
 
 and the state Transation Function is:
-
-
 
 \begin{math}
 g\left( \vec{X_t}, \vec{U_t} \right )  =
@@ -55,7 +82,7 @@ g\left( \vec{X_t}, \vec{U_t} \right )  =
 x + \left[ \cos{\theta}V_rx - \sin{\theta}V_{ry} \right] \Delta T + \frac{ a_x {\Delta T}^2 }{ 2 } \\
 y + \left[ \sin{\theta}V_rx + \cos{\theta}V_{ry} \right] \Delta T + \frac{ a_y {\Delta T}^2 }{ 2 } \\
 \theta + \omega \Delta T \\
-\left[ \cos{\theta}V_rx - \sin{\theta}V_{ry} \right] + a_x \Delta T \\
+\left[ \cos{\theta}V_rx - \sin{\theta}V_{ry} \right] + a_x\DeltaT \\
 \left[ \sin{\theta}V_rx + \cos{\theta}V_{ry} \right] + a_y\Delta T \\
 \omega_u \\
 a_x \\
@@ -67,9 +94,7 @@ a_y \\
 
 
 
-This Makes The Transition Jacobian To Look Like This
-
-
+This Makes The Transition Jacobian To Look Like This 
 
 \begin{math}
 \vec{G} =
@@ -87,27 +112,5 @@ This Makes The Transition Jacobian To Look Like This
 \end{math}
 
 
-
-
-Notice that columns of \omega \v_x and \v_y are all zero because PID in the robot base will make sure that the velosity is kept equal to the provided control signal
-
-and,
-
- \begin{math}
-\vec{V} = 
-\begin{bmatrix}
-\cos \theta \Delata T & - \sin \theta \Delta T & 0 \\
-\sin \theta \Delta T & \cos \theta \Delta T & 0 \\
-0 & 0 & \Delta T \\
-\cos \theta & - \sin \theta & 0 \\
-\sin \theta  & \cos \theta  & 0 \\
-0 & 0 & 1 \\
-0 & 0 & 0 \\
-0 & 0 & 0 \\
-\end{bmatrix}
-\end{math}
-
-
-* Update States
-
-The Update states are all set up by indentity Matrices
+Notice that columns of \(\omega\) \v\textsubscript{x} and v\textsubscript{y} are all zero because PID in the robot base will make sure that the velosity is kept equal to the provided control signal
+\end{document}
