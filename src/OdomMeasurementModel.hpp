@@ -61,15 +61,15 @@ namespace Robot {
       this->H(M::VY, S::VY) = 1;
       this->H(M::OMEGA, S::OMEGA) = 1;
 
-      //  this->V.setIdentity();
+      this->V.setIdentity();
 
-      this->V.setZero();
-      this->V(M::X, M::X) = 0.7;
-      this->V(M::Y, M::Y) = 0.7;
-      this->V(M::THETA, M::THETA) = 3;
-      this->V(M::VX, M::VX) = 0.1;
-      this->V(M::VY, M::VY) = 0.1;
-      this->V(M::OMEGA, M::OMEGA) = 1;
+      // this->V.setZero();
+      // this->V(M::X, M::X) = 1;
+      // this->V(M::Y, M::Y) = 1;
+      // this->V(M::THETA, M::THETA) = 1;
+      // this->V(M::VX, M::VX) = 3;
+      // this->V(M::VY, M::VY) = 3;
+      // this->V(M::OMEGA, M::OMEGA) = 5;
     }
   
     M h(const S& x) const {

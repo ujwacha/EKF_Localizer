@@ -55,20 +55,20 @@ int main() {
   Kalman::Covariance<OdomMeasurement> odom_cov;
   Kalman::Covariance<ImuMeasurement> imu_cov;
 
-  // imu_cov(ImuMeasurement::AX, ImuMeasurement::AX) = 2;
-  // imu_cov(ImuMeasurement::AY, ImuMeasurement::AY) = 2;
-  // imu_cov(ImuMeasurement::YAW, ImuMeasurement::YAW) = 0.1;
+  imu_cov(ImuMeasurement::AX, ImuMeasurement::AX) = 1;
+  imu_cov(ImuMeasurement::AY, ImuMeasurement::AY) = 1;
+  imu_cov(ImuMeasurement::YAW, ImuMeasurement::YAW) = 0.03;
 
 
-  // odom_cov(OdomMeasurement::X, OdomMeasurement::X) = 5;
-  // odom_cov(OdomMeasurement::Y, OdomMeasurement::Y) = 5;
-  // odom_cov(OdomMeasurement::THETA, OdomMeasurement::THETA) = 10;
-  // odom_cov(OdomMeasurement::VX, OdomMeasurement::VX) = 1;
-  // odom_cov(OdomMeasurement::VY, OdomMeasurement::VY) = 1;
-  // odom_cov(OdomMeasurement::OMEGA, OdomMeasurement::OMEGA) = 3;
+  odom_cov(OdomMeasurement::X, OdomMeasurement::X) = 0.6;
+  odom_cov(OdomMeasurement::Y, OdomMeasurement::Y) = 0.6;
+  odom_cov(OdomMeasurement::THETA, OdomMeasurement::THETA) = 6;
+  odom_cov(OdomMeasurement::VX, OdomMeasurement::VX) = 0.1;
+  odom_cov(OdomMeasurement::VY, OdomMeasurement::VY) = 0.1;
+  odom_cov(OdomMeasurement::OMEGA, OdomMeasurement::OMEGA) = 3;
 
-  // odom_model.setCovariance(odom_cov);
-  // imu_model.setCovariance(imu_cov);
+  odom_model.setCovariance(odom_cov);
+  imu_model.setCovariance(imu_cov);
 
   /// Set Covariance Of State Model
 
@@ -90,32 +90,32 @@ int main() {
 
   // Get The CSV File
 
-  rapidcsv::Document csv("../real_life_dta/robot_data.csv");
+  rapidcsv::Document csv("../real_life_dta/10-rot.csv");
 
-  std::vector rx = csv.GetColumn<float>(2);
-  std::vector ry = csv.GetColumn<float>(3);
-  std::vector rw = csv.GetColumn<float>(4);
-  std::vector t = csv.GetColumn<float>(1);
+  std::vector rx = csv.GetColumn<float>(1);
+  std::vector ry = csv.GetColumn<float>(2);
+  std::vector rw = csv.GetColumn<float>(3);
+  std::vector t = csv.GetColumn<float>(0);
 
-  std::vector ox = csv.GetColumn<float>(5);
-  std::vector oy = csv.GetColumn<float>(6);
-  std::vector oth = csv.GetColumn<float>(7);
-  std::vector ovx = csv.GetColumn<float>(8);
-  std::vector ovy = csv.GetColumn<float>(9);
-  std::vector ow = csv.GetColumn<float>(10);
-
-
-  std::vector iy  = csv.GetColumn<float>(13);
-  std::vector iax = csv.GetColumn<float>(14);
-  std::vector iay = csv.GetColumn<float>(15);
+  std::vector ox = csv.GetColumn<float>(4);
+  std::vector oy = csv.GetColumn<float>(5);
+  std::vector oth = csv.GetColumn<float>(6);
+  std::vector ovx = csv.GetColumn<float>(7);
+  std::vector ovy = csv.GetColumn<float>(8);
+  std::vector ow = csv.GetColumn<float>(9);
 
 
+  std::vector iy  = csv.GetColumn<float>(12);
+  std::vector iax = csv.GetColumn<float>(13);
+  std::vector iay = csv.GetColumn<float>(14);
 
-  float time = 0.01;
 
-  for (int i = 0; i < rx.size() ; i++) {
 
-    
+  double time = 0.01;
+
+  for (int i = 5; i < rx.size() ; i++) {
+
+    time = t[i] - t[i-1];
 
     // state = sys.f(state, twist, time);
 
@@ -135,8 +135,8 @@ int main() {
       odom.vx() = ovx[i];
       odom.vy() = ovy[i];
       
-      // Update EKF
-      x_ekf = ekf.update(odom_model, odom, time);
+      // update EKF
+           x_ekf = ekf.update(odom_model, odom, time);
             
     }
 
@@ -149,7 +149,7 @@ int main() {
       imu.ax() = iax[i];
       imu.ay() = iay[i];
 
-      // Update EKF
+      // Update EK// F
       x_ekf = ekf.update(imu_model, imu, time);
             
     }
@@ -159,7 +159,7 @@ int main() {
     fs << i << "," << state.x() << "," << state.y() << ","<< state.theta() << ","
        << x_ekf.x() << "," << x_ekf.y() << "," << x_ekf.theta() << ","
        << x_pred.x() << "," << x_pred.y() << "," << x_pred.theta() 
-       << "," << ox[i] << "," << oy[i] << "," << oy[i] << std::endl;
+       << "," << ox[i] << "," << oy[i] << "," << oth[i] << "," << iy[i] << std::endl;
 
 
     twist.romega() = rw[i];

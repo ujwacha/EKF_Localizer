@@ -9,7 +9,7 @@ set datafile separator ","
 n = system("wc -l < data.csv")  # Count the number of lines in the CSV file
 
 do for [i=1:n] {
-    plot "data.csv" using 1:7 every ::1::i with lines title "Angle"
+    plot "data.csv" using 1:13 every ::1::i with lines title "Angle"
 
     pause 0.001  # Adjust delay (in seconds) between frames
     

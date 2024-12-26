@@ -43,9 +43,9 @@ namespace Robot {
 
       // Seti The Noise Covariance
       this->V.setZero();
-      this->V(M::AX, M::AX) = 0.1;
-      this->V(M::AY, M::AY) = 0.1;
-      this->V(M::YAW, M::YAW) = 0.1;
+      this->V(M::AX, M::AX) = 1;
+      this->V(M::AY, M::AY) = 1;
+      this->V(M::YAW, M::YAW) = 3;
 
     }
 

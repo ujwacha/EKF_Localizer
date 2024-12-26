@@ -6,10 +6,10 @@ set grid
 set datafile separator ","
 
 # Animate point
-n = system("wc -l < data.csv")  # Count the number of lines in the CSV file
+n = system("wc -l < robot_data.csv")  # Count the number of lines in the CSV file
 
 do for [i=1:n] {
-    plot "data.csv" using 1:7 every ::1::i with lines title "Angle"
+    plot "robot_data.csv" using 1:9 every ::1::i with lines title "Angle"
 
     pause 0.001  # Adjust delay (in seconds) between frames
     

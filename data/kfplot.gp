@@ -14,7 +14,7 @@ do for [i=1:n] {
     # plot "data.csv" using 1:4 every ::1::i with linespoints title "Angle"
 
 
-    pause 0.1  # Adjust delay (in seconds) between frames
+    pause 0.01  # Adjust delay (in seconds) between frames
     
 }
 

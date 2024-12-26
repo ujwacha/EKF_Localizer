@@ -14,3 +14,7 @@
 /data/compile_script_from_build.sh~
 /data/frameplot.gp~
 /data/kfplot.gp~
+/data/angleplot_odom.gp~
+/data/plotscript_odom.gp~
+/ltximg/
+/texfrag/
