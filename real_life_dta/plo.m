@@ -1,6 +1,6 @@
 data = csvread("10-rot.csv");
 
-vec = data(:,7);
+vec = data(:,13);
 
 
 
