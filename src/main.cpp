@@ -57,15 +57,15 @@ int main() {
 
   imu_cov(ImuMeasurement::AX, ImuMeasurement::AX) = 1;
   imu_cov(ImuMeasurement::AY, ImuMeasurement::AY) = 1;
-  imu_cov(ImuMeasurement::YAW, ImuMeasurement::YAW) = 0.005;
+  imu_cov(ImuMeasurement::YAW, ImuMeasurement::YAW) = 0.1;
 
 
-  odom_cov(OdomMeasurement::X, OdomMeasurement::X) = 0.6;
-  odom_cov(OdomMeasurement::Y, OdomMeasurement::Y) = 0.6;
-  odom_cov(OdomMeasurement::THETA, OdomMeasurement::THETA) = 0.1;
-  odom_cov(OdomMeasurement::VX, OdomMeasurement::VX) = 0.1;
-  odom_cov(OdomMeasurement::VY, OdomMeasurement::VY) = 0.1;
-  odom_cov(OdomMeasurement::OMEGA, OdomMeasurement::OMEGA) = 0.1;
+  odom_cov(OdomMeasurement::X, OdomMeasurement::X) = 0.5;
+  odom_cov(OdomMeasurement::Y, OdomMeasurement::Y) = 0.5;
+  odom_cov(OdomMeasurement::THETA, OdomMeasurement::THETA) = 1;
+  odom_cov(OdomMeasurement::VX, OdomMeasurement::VX) = 0.000625;
+  odom_cov(OdomMeasurement::VY, OdomMeasurement::VY) = 0.003;
+  odom_cov(OdomMeasurement::OMEGA, OdomMeasurement::OMEGA) = 0.001;
 
   odom_model.setCovariance(odom_cov);
   imu_model.setCovariance(imu_cov);
@@ -113,7 +113,7 @@ int main() {
 
   double time = 0.01;
 
-  for (int i = 5; i < rx.size() ; i++) {
+  for (int i = 22; i < rx.size() ; i++) {
 
     time = t[i] - t[i-1];
 
@@ -145,7 +145,7 @@ int main() {
       // We can measure the orientation every 5th step
       ImuMeasurement imu;
       // Measurement is affected by noise as well
-      imu.yaw() = iy[i];
+      imu.yaw() = iy[i] ;
       imu.ax() = iax[i];
       imu.ay() = iay[i];
 
@@ -162,6 +162,8 @@ int main() {
        << "," << ox[i] << "," << oy[i] << "," << oth[i] << "," << iy[i] << std::endl;
 
 
+    
+    
     twist.romega() = rw[i];
     twist.rvx() = rx[i];
     twist.rvy() = ry[i];

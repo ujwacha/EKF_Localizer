@@ -15,7 +15,17 @@ vec = data(:,13);
 #  pause(0.001);
 #end
 
-plot(data(:,1), data(:,13))
+plot(data(:,1), data(:,3))
+hold on
+plot(data(:,1), data(:,8))
+
+mean(data(1000:4000,8))
+var(data(1000:4000,8))
+
+
+
+mean(data(1000:4000,3))
+var(data(1000:4000,3))
 
 length(data(:,7))
 

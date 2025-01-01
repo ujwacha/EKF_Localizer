@@ -5,22 +5,21 @@ public:
 
   AngDou(double data_, bool ang = false): data(data_), is_angle(ang) {}
 
+
   AngDou operator+(AngDou &an) {
     return AngDou(data + an.data);
   }
 
   AngDou operator-(AngDou &an) {
-    return AngDou(data + an.data);
+    return AngDou(data - an.data);
   }
 
   AngDou operator*(AngDou &an) {
-    return AngDou(data + an.data);
+    return AngDou(data * an.data);
   }
 
   AngDou operator/(AngDou &an) {
-    return AngDou(data + an.data);
+    return AngDou(data / an.data);
   }
-
-
 
 }

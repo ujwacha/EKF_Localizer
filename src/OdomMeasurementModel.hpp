@@ -51,25 +51,9 @@ namespace Robot {
     OdomMeasurementModel() {
       // Setup jacobians. As these are static, we can define them once
       // and do not need to update them dynamically
-      //this->H.setIdentity();
 
-      this->H.setZero();
-      this->H(M::X, S::X) = 1;
-      this->H(M::Y, S::Y) = 1;
-      this->H(M::THETA, S::THETA) = 1;
-      this->H(M::VX, S::VX) = 1;
-      this->H(M::VY, S::VY) = 1;
-      this->H(M::OMEGA, S::OMEGA) = 1;
-
+      this->H.setIdentity();
       this->V.setIdentity();
-
-      // this->V.setZero();
-      // this->V(M::X, M::X) = 1;
-      // this->V(M::Y, M::Y) = 1;
-      // this->V(M::THETA, M::THETA) = 1;
-      // this->V(M::VX, M::VX) = 3;
-      // this->V(M::VY, M::VY) = 3;
-      // this->V(M::OMEGA, M::OMEGA) = 5;
     }
   
     M h(const S& x) const {
@@ -78,14 +62,34 @@ namespace Robot {
       measurement.x() = x.x();
       measurement.y() = x.y();
       measurement.theta() = x.theta();
-      measurement.vx() = x.vx();
-      measurement.vy() = x.vy();
+      measurement.vx() = std::cos(x.theta())*x.vx() - std::sin(x.theta())*x.vy();
+      measurement.vy() = std::sin(x.theta())*x.vx() + std::cos(x.theta())*x.vy();
       measurement.omega() = x.omega();
-    
+
       return measurement;
     }
 
-  
-  
+
+    void updateJacobians(const S& x, const double t = 0.05) {
+
+      std::cout << "ODOM Jacobian Updated" << std::endl;
+
+      this->H.setZero();
+
+      this->H(M::X, S::X) = 1;
+      this->H(M::Y, S::Y) = 1;
+      this->H(M::THETA, S::THETA) = 1;
+      this->H(M::OMEGA, S::OMEGA) = 1;
+
+      this->H(M::VX, S::THETA) = -std::sin(x.theta())*x.vx() - std::cos(x.theta())*x.vy();
+      this->H(M::VY, S::THETA) = std::cos(x.theta())*x.vx() - std::sin(x.theta())*x.vy();
+
+      this->H(M::VX, S::VX) = std::cos(x.theta());
+      this->H(M::VX, S::VY) = std::sin(x.theta());
+
+      this->H(M::VY, S::VX) = -std::sin(x.theta());
+      this->H(M::VY, S::VY) = std::cos(x.theta());
+    }
+
   };
 }

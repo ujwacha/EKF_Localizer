@@ -9,9 +9,9 @@ set datafile separator ","
 n = system("wc -l < data.csv")  # Count the number of lines in the CSV file
 
 do for [i=1:n] {
-    plot "data.csv" using 11:12 every ::1::i with lines title "ODOM", \
-         "data.csv" using 5:6 every ::i::i with points pointtype 7 pointsize 1 title sprintf("Frame %d", i), \
-	 "data.csv" using 5:6 every ::i::i with lines title "KF"
+    plot "data.csv" using 5:6 every ::1::i with lines title "ODOM"
+#         "data.csv" using 5:6 every ::i::i with points pointtype 7 pointsize 1 title sprintf("Frame %d", i), \
+#	 "data.csv" using 5:6 every ::i::i with lines title "KF"
 	 
     # plot "data.csv" using 1:4 every ::1::i with linespoints title "Angle"
 

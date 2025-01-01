@@ -109,7 +109,7 @@ namespace Robot {
     }
 
 
-    S f(const S& x, const C& u, const float t = 0.05) const {
+    S f(const S& x, const C& u, const double t = 0.05) const {
       S x_;
 
       x_.x()  = x.x() + (cos(x.theta()) * u.rvx() - sin(x.theta()) * u.rvy())*PER + 0.5*(PER * PER)*x.ax();
@@ -128,10 +128,13 @@ namespace Robot {
 
 protected:
     // Update the Jecobian
-    void updateJacobians(const S &x, const C &u, const float t = 0.05) {
+    void updateJacobians(const S &x, const C &u, const double t = 0.05) {
+      
+
       // F = df/dx (Jacobian of state transition w.r.t. the state)
       this->F.setZero();
 
+      std::cout << "SYSTEM JACOBIAN UPDATED" << std::endl;
 
 
       // First Set the ones that are 1

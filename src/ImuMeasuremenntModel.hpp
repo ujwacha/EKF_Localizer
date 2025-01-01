@@ -42,20 +42,36 @@ namespace Robot {
       this->H(M::YAW, S::THETA) = 1;
 
       // Seti The Noise Covariance
-      this->V.setZero();
-      this->V(M::AX, M::AX) = 1;
-      this->V(M::AY, M::AY) = 1;
-      this->V(M::YAW, M::YAW) = 3;
+      // this->V.set();
 
+      this->V.setIdentity();
     }
 
     M h(const S& x) const {
       M measurement;
-      measurement.ax() = x.ax();
-      measurement.ay() = x.ay();
+      measurement.ax() = std::cos(x.theta())*x.ax() - std::sin(x.theta())*x.ay();
+      measurement.ay() = std::sin(x.theta())*x.ax() + std::cos(x.theta())*x.ay();
       measurement.yaw() = x.theta();
 
       return measurement;
+    }
+
+    void updateJacobians(const S& x, const double t = 0.05) {
+      this->H.setZero();
+
+      std::cout << "IMU Jacobian Updated" << std::endl;
+
+      this->H(M::AX, S::THETA) = -std::sin(x.theta())*x.ax() - std::cos(x.theta())*x.ay();
+      this->H(M::AY, S::THETA) = std::cos(x.theta())*x.ax() - std::sin(x.theta())*x.ay();
+      this->H(M::YAW, S::THETA) = 1;
+
+      this->H(M::AX, S::AX) = std::cos(x.theta());
+      this->H(M::AX, S::AY) = -std::sin(x.theta());
+
+
+      this->H(M::AY, S::AX) = std::sin(x.theta());
+      this->H(M::AY, S::AY) = std::cos(x.theta());
+     
     }
  
   };
