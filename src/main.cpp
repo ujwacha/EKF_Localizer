@@ -57,14 +57,21 @@ int main() {
 
   imu_cov(ImuMeasurement::AX, ImuMeasurement::AX) = 1;
   imu_cov(ImuMeasurement::AY, ImuMeasurement::AY) = 1;
-  imu_cov(ImuMeasurement::YAW, ImuMeasurement::YAW) = 0.01;
+  imu_cov(ImuMeasurement::YAW, ImuMeasurement::YAW) = 0.000000000001;
 
 
   odom_cov(OdomMeasurement::X, OdomMeasurement::X) = 100;
   odom_cov(OdomMeasurement::Y, OdomMeasurement::Y) = 100;
-  odom_cov(OdomMeasurement::THETA, OdomMeasurement::THETA) = 1;
-  odom_cov(OdomMeasurement::VX, OdomMeasurement::VX) = 0.000625;
-  odom_cov(OdomMeasurement::VY, OdomMeasurement::VY) = 0.003;
+  odom_cov(OdomMeasurement::THETA, OdomMeasurement::THETA) = 0.1;
+
+  // odom_cov(OdomMeasurement::VX, OdomMeasurement::VX) = 0.000625;
+  // odom_cov(OdomMeasurement::VY, OdomMeasurement::VY) = 0.003;
+
+  odom_cov(OdomMeasurement::VX, OdomMeasurement::VX) = 0.00000000625;
+  odom_cov(OdomMeasurement::VY, OdomMeasurement::VY) = 0.00000003;
+
+
+
   odom_cov(OdomMeasurement::OMEGA, OdomMeasurement::OMEGA) = 0.001;
 
   odom_model.setCovariance(odom_cov);
