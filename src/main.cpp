@@ -57,7 +57,7 @@ int main() {
 
   imu_cov(ImuMeasurement::AX, ImuMeasurement::AX) = 1;
   imu_cov(ImuMeasurement::AY, ImuMeasurement::AY) = 1;
-  imu_cov(ImuMeasurement::YAW, ImuMeasurement::YAW) = 0.1;
+  imu_cov(ImuMeasurement::YAW, ImuMeasurement::YAW) = 0.01;
 
 
   odom_cov(OdomMeasurement::X, OdomMeasurement::X) = 100;

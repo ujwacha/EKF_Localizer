@@ -117,8 +117,8 @@ namespace Robot {
 
       x_.theta()  = angleClamp(x.theta() + x.omega()*t); // Clamping the angle, hope it won't affect the jacobian
 
-      x_.vx() = (cos(x.theta()) * u.rvx() - sin(x.theta()) * u.rvy()) + x.ax()*t + x.ax()*t;
-      x_.vy() = (sin(x.theta()) * u.rvx() + cos(x.theta()) * u.rvy()) + x.ay()*t + x.ax()*t;
+      x_.vx() = (cos(x.theta()) * u.rvx() - sin(x.theta()) * u.rvy()) + x.ax()*t;
+      x_.vy() = (sin(x.theta()) * u.rvx() + cos(x.theta()) * u.rvy()) + x.ay()*t;
       x_.omega()  = u.romega();
 
       x_.ax() = x.ax();
@@ -165,6 +165,9 @@ protected:
       this->F(S::X, S::VX)        = t;
       this->F(S::Y, S::VY)        = t;
       this->F(S::THETA, S::OMEGA) = t;
+
+      // this->F(S::OMEGA, S::THETA) = t;
+
       this->F(S::VX, S::AX)       = t;
       this->F(S::VY, S::AY)       = t;
 
@@ -173,6 +176,11 @@ protected:
       this->F(S::X, S::AX) = 0.5*t*t;
       this->F(S::Y, S::AY) = 0.5*t*t;
 
+      std::cout << "JACCC" << std::endl;
+
+      std::cout << this->F << std::endl;
+
+      std::cout << "JACCC END" << std::endl;
 
       // W = df/dw (Jacobian of state transition w.r.t. the noise)
       // this->W.setIdentity();
@@ -180,11 +188,11 @@ protected:
       this->W.setZero();
 
 
-      this->W(S::VX, U::VRX) = std::cos(x.theta());
-      this->W(S::VX, U::VRY) = -std::sin(x.theta());
+      this->W(S::VX, C::RVX) = std::cos(x.theta());
+      this->W(S::VX, C::RVY) = -std::sin(x.theta());
 
-      this->W(S::VY, U::VRX) = std::sin(x.theta());
-      this->W(S::VY, U::VRX) = std::cos(x.theta());
+      this->W(S::VY, C::RVX) = std::sin(x.theta());
+      this->W(S::VY, C::RVX) = std::cos(x.theta());
 
       // W Matrix Has been set
 
