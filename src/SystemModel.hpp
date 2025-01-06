@@ -144,6 +144,7 @@ protected:
       this->F(S::THETA, S::THETA) = 1;
       this->F(S::AX, S::AX) = 1;
       this->F(S::AY, S::AY) = 1;
+      // this->F(S::OMEGA, S::OMEGA) = 1;
      
       double this1 = (-sin(x.theta())*u.rvx() - cos(x.theta())*u.rvy());
       double this2 = (cos(x.theta())*u.rvx() - sin(x.theta())*u.rvy());
