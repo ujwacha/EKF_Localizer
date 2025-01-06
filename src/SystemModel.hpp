@@ -112,12 +112,13 @@ namespace Robot {
     S f(const S& x, const C& u, const double t = 0.05) const {
       S x_;
 
-      x_.x()  = x.x() + (cos(x.theta()) * u.rvx() - sin(x.theta()) * u.rvy())*PER + 0.5*(PER * PER)*x.ax();
-      x_.y()  = x.y() + (sin(x.theta()) * u.rvx() + cos(x.theta()) * u.rvy())*PER + x.ay()*(PER*PER)*0.5f;
-      x_.theta()  = angleClamp(x.theta() + x.omega()*PER); // Clamping the angle, hope it won't affect the jacobian
+      x_.x()  = x.x() + x.vx()*t + 0.5*(t*t)*x.ax();
+      x_.y()  = x.y() + x.vy()*t + x.ay()*(t*t)*0.5;
 
-      x_.vx() = (cos(x.theta()) * u.rvx() - sin(x.theta()) * u.rvy()) + x.ax()*PER;
-      x_.vy() = (sin(x.theta()) * u.rvx() + cos(x.theta()) * u.rvy()) + x.ay()*PER;
+      x_.theta()  = angleClamp(x.theta() + x.omega()*t); // Clamping the angle, hope it won't affect the jacobian
+
+      x_.vx() = (cos(x.theta()) * u.rvx() - sin(x.theta()) * u.rvy()) + x.ax()*t + x.ax()*t;
+      x_.vy() = (sin(x.theta()) * u.rvx() + cos(x.theta()) * u.rvy()) + x.ay()*t + x.ax()*t;
       x_.omega()  = u.romega();
 
       x_.ax() = x.ax();
@@ -147,22 +148,30 @@ protected:
       double this1 = (-sin(x.theta())*u.rvx() - cos(x.theta())*u.rvy());
       double this2 = (cos(x.theta())*u.rvx() - sin(x.theta())*u.rvy());
 
+
+      // This part changed in the new one 
+      this->F(S::X, S::THETA) = 0;
+      this->F(S::Y, S::THETA) = 0;
+
+
+
       // use things
-      this->F(S::X, S::THETA) = PER*this1;
-      this->F(S::Y, S::THETA) = PER*this2;
       this->F(S::VX, S::THETA) = this1;
       this->F(S::VY, S::THETA) = this2;
 
-      // use time period
 
-      this->F(S::THETA, S::OMEGA) = PER;
-      this->F(S::VX, S::AX) = PER;
-      this->F(S::VY, S::AY) = PER;
+
+      // use time period
+      this->F(S::X, S::VX)        = t;
+      this->F(S::Y, S::VY)        = t;
+      this->F(S::THETA, S::OMEGA) = t;
+      this->F(S::VX, S::AX)       = t;
+      this->F(S::VY, S::AY)       = t;
 
       // use 0.5T^2
 
-      this->F(S::X, S::AX) = 0.5*PER*PER;
-      this->F(S::Y, S::AY) = 0.5*PER*PER;
+      this->F(S::X, S::AX) = 0.5*t*t;
+      this->F(S::Y, S::AY) = 0.5*t*t;
 
 
       // W = df/dw (Jacobian of state transition w.r.t. the noise)
@@ -170,24 +179,16 @@ protected:
 
       this->W.setZero();
 
-      this->W(C::RVX, S::X) = cos(x.theta()) * PER;
-      this->W(C::RVX, S::Y) = sin(x.theta()) * PER;
-      this->W(C::RVX, S::VX) = cos(x.theta());
-      this->W(C::RVX, S::VY) = sin(x.theta());
 
-      this->W(C::RVY, S::X) = -sin(x.theta()) * PER;
-      this->W(C::RVY, S::Y) = cos(x.theta()) * PER;
-      this->W(C::RVY, S::VX) = -sin(x.theta());
-      this->W(C::RVY, S::VY) = cos(x.theta());
+      this->W(S::VX, U::VRX) = std::cos(x.theta());
+      this->W(S::VX, U::VRY) = -std::sin(x.theta());
 
-      this->W(C::ROMEGA, S::THETA) = PER; 
-      this->W(C::ROMEGA, S::OMEGA) = 1;
+      this->W(S::VY, U::VRX) = std::sin(x.theta());
+      this->W(S::VY, U::VRX) = std::cos(x.theta());
 
       // W Matrix Has been set
 
-      // TODO: more sophisticated noise modelling
-      //       i.e. The noise affects the the direction in which we move as
-      //       well as the velocity (i.e. the distance we move)
+
     }
   };
 }

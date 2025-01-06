@@ -60,8 +60,8 @@ int main() {
   imu_cov(ImuMeasurement::YAW, ImuMeasurement::YAW) = 0.1;
 
 
-  odom_cov(OdomMeasurement::X, OdomMeasurement::X) = 0.5;
-  odom_cov(OdomMeasurement::Y, OdomMeasurement::Y) = 0.5;
+  odom_cov(OdomMeasurement::X, OdomMeasurement::X) = 100;
+  odom_cov(OdomMeasurement::Y, OdomMeasurement::Y) = 100;
   odom_cov(OdomMeasurement::THETA, OdomMeasurement::THETA) = 1;
   odom_cov(OdomMeasurement::VX, OdomMeasurement::VX) = 0.000625;
   odom_cov(OdomMeasurement::VY, OdomMeasurement::VY) = 0.003;
