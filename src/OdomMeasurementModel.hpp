@@ -62,8 +62,8 @@ namespace Robot {
       measurement.x() = x.x();
       measurement.y() = x.y();
       measurement.theta() = x.theta();
-      measurement.vx() = std::cos(x.theta())*x.vx() - std::sin(x.theta())*x.vy();
-      measurement.vy() = std::sin(x.theta())*x.vx() + std::cos(x.theta())*x.vy();
+      measurement.vx() = std::cos(x.theta())*x.vx() + std::sin(x.theta())*x.vy();
+      measurement.vy() = -std::sin(x.theta())*x.vx() + std::cos(x.theta())*x.vy();
       measurement.omega() = x.omega();
 
       return measurement;
@@ -81,13 +81,13 @@ namespace Robot {
       this->H(M::THETA, S::THETA) = 1;
       this->H(M::OMEGA, S::OMEGA) = 1;
 
-      this->H(M::VX, S::THETA) = -std::sin(x.theta())*x.vx() - std::cos(x.theta())*x.vy();
-      this->H(M::VY, S::THETA) = std::cos(x.theta())*x.vx() - std::sin(x.theta())*x.vy();
+      this->H(M::VX, S::THETA) = -std::sin(x.theta())*x.vx() + std::cos(x.theta())*x.vy();
+      this->H(M::VY, S::THETA) = -std::cos(x.theta())*x.vx() - std::sin(x.theta())*x.vy();
 
       this->H(M::VX, S::VX) = std::cos(x.theta());
-      this->H(M::VX, S::VY) = std::sin(x.theta());
+      this->H(M::VX, S::VY) = -std::sin(x.theta());
 
-      this->H(M::VY, S::VX) = -std::sin(x.theta());
+      this->H(M::VY, S::VX) = std::sin(x.theta());
       this->H(M::VY, S::VY) = std::cos(x.theta());
     }
 
