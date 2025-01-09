@@ -60,18 +60,25 @@ namespace Robot {
     void updateJacobians(const S& x, const double t = 0.05) {
       this->H.setZero();
 
-      std::cout << "IMU Jacobian Updated" << std::endl;
-
       this->H(M::AX, S::THETA) = -std::sin(x.theta())*x.ax() + std::cos(x.theta())*x.ay();
       this->H(M::AY, S::THETA) = -std::cos(x.theta())*x.ax() - std::sin(x.theta())*x.ay();
       this->H(M::YAW, S::THETA) = 1;
 
+      // Row
       this->H(M::AX, S::AX) = std::cos(x.theta());
       this->H(M::AX, S::AY) = std::sin(x.theta());
 
-
+      //Row
       this->H(M::AY, S::AX) = -std::sin(x.theta());
       this->H(M::AY, S::AY) = std::cos(x.theta());
+
+
+      std::cout << "IMU Jacobian Updated" << std::endl;
+      std::cout << "IMU H is" << std::endl;
+      std::cout << this->H << std::endl;
+      std::cout << std::endl << std::endl;
+
+
      
     }
  

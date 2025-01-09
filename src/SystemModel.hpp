@@ -117,9 +117,13 @@ namespace Robot {
 
       x_.theta()  = angleClamp(x.theta() + x.omega()*t); // Clamping the angle, hope it won't affect the jacobian
 
-      x_.vx() = (cos(x.theta()) * u.rvx() - sin(x.theta()) * u.rvy()) + x.ax()*t;
-      x_.vy() = (sin(x.theta()) * u.rvx() + cos(x.theta()) * u.rvy()) + x.ay()*t;
-      x_.omega()  = u.romega();
+      // x_.vx() = (cos(x.theta()) * u.rvx() - sin(x.theta()) * u.rvy()) + x.ax()*t;
+      // x_.vy() = (sin(x.theta()) * u.rvx() + cos(x.theta()) * u.rvy()) + x.ay()*t;
+      //      x_.omega()  = u.romega();
+
+      x_.vx() = x.vx() + x.ax()*t;
+      x_.vy() = x.vy() + x.ay()*t;
+      x_.omega()  = x.omega();
 
       x_.ax() = x.ax();
       x_.ay() = x.ay();
@@ -144,21 +148,23 @@ protected:
       this->F(S::THETA, S::THETA) = 1;
       this->F(S::AX, S::AX) = 1;
       this->F(S::AY, S::AY) = 1;
-      // this->F(S::OMEGA, S::OMEGA) = 1;
+      this->F(S::OMEGA, S::OMEGA) = 1;
+      this->F(S::VX, S::VX) = 1;
+      this->F(S::VY, S::VY) = 1;
      
-      double this1 = (-sin(x.theta())*u.rvx() - cos(x.theta())*u.rvy());
-      double this2 = (cos(x.theta())*u.rvx() - sin(x.theta())*u.rvy());
+      // double this1 = (-sin(x.theta())*u.rvx() - cos(x.theta())*u.rvy());
+      // double this2 = (cos(x.theta())*u.rvx() - sin(x.theta())*u.rvy());
 
 
-      // This part changed in the new one 
-      this->F(S::X, S::THETA) = 0;
-      this->F(S::Y, S::THETA) = 0;
+      // // This part changed in the new one 
+      // this->F(S::X, S::THETA) = 0;
+      // this->F(S::Y, S::THETA) = 0;
 
 
 
-      // use things
-      this->F(S::VX, S::THETA) = this1;
-      this->F(S::VY, S::THETA) = this2;
+      // // use things
+      // this->F(S::VX, S::THETA) = 0;
+      // this->F(S::VY, S::THETA) = 0;
 
 
 
@@ -186,14 +192,14 @@ protected:
       // W = df/dw (Jacobian of state transition w.r.t. the noise)
       // this->W.setIdentity();
 
-      this->W.setZero();
+      this->W.setIdentity();
 
 
-      this->W(S::VX, C::RVX) = std::cos(x.theta());
-      this->W(S::VX, C::RVY) = -std::sin(x.theta());
+      // this->W(S::VX, C::RVX) = std::cos(x.theta());
+      // this->W(S::VX, C::RVY) = -std::sin(x.theta());
 
-      this->W(S::VY, C::RVX) = std::sin(x.theta());
-      this->W(S::VY, C::RVX) = std::cos(x.theta());
+      // this->W(S::VY, C::RVX) = std::sin(x.theta());
+      // this->W(S::VY, C::RVX) = std::cos(x.theta());
 
       // W Matrix Has been set
 

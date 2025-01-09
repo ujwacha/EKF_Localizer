@@ -9,9 +9,17 @@
 #include "OdomMeasurementModel.hpp"
 #include "ImuMeasuremenntModel.hpp"
 #include "kalman/ExtendedKalmanFilter.hpp"
-
 #include "kalman/Types.hpp"
 #include "rapidcsv.h"
+#include "ThreeWheel.hpp"
+
+
+#define MID_RADIUS 0.235
+#define RIGHT_RADIUS 0.32
+#define LEFT_RADIUS 0.165
+#define WHEEL_D 0.0574
+
+
 
 
 
@@ -23,9 +31,12 @@ typedef Robot::SystemModel<T> SystemModel;
 
 typedef Robot::OdomMeasurement<T> OdomMeasurement;
 typedef Robot::ImuMeasurement<T> ImuMeasurement;
+typedef Robot::WheelMeasurement<T> WheelMeasurement;
 
 typedef Robot::OdomMeasurementModel<T> OdomMeasurementModel;
 typedef Robot::ImuMeasurementModel<T> ImuMeasurementModel;
+typedef Robot::WheelMeasurementModel<T> WheelMeasurementModel;
+
 
 
 template <typename T>
@@ -50,14 +61,23 @@ int main() {
 
   OdomMeasurementModel odom_model;
   ImuMeasurementModel imu_model;
+  WheelMeasurementModel wheel_model(LEFT_RADIUS, RIGHT_RADIUS, MID_RADIUS, WHEEL_D / 2);
   SystemModel sys;
 
   Kalman::Covariance<OdomMeasurement> odom_cov;
   Kalman::Covariance<ImuMeasurement> imu_cov;
+  Kalman::Covariance<WheelMeasurement> wheel_cov;
+
+
+  wheel_cov(WheelMeasurement::OMEGA_L, WheelMeasurement::OMEGA_L) = 0.001;
+  wheel_cov(WheelMeasurement::OMEGA_R, WheelMeasurement::OMEGA_L) = 0.001;
+  wheel_cov(WheelMeasurement::OMEGA_M, WheelMeasurement::OMEGA_L) = 0.001;
+
+  
 
   imu_cov(ImuMeasurement::AX, ImuMeasurement::AX) = 1;
   imu_cov(ImuMeasurement::AY, ImuMeasurement::AY) = 1;
-  imu_cov(ImuMeasurement::YAW, ImuMeasurement::YAW) = 0.000000000001;
+  imu_cov(ImuMeasurement::YAW, ImuMeasurement::YAW) = 0.00000000001;
 
 
   odom_cov(OdomMeasurement::X, OdomMeasurement::X) = 100;
@@ -76,12 +96,9 @@ int main() {
 
   odom_model.setCovariance(odom_cov);
   imu_model.setCovariance(imu_cov);
-
+  wheel_model.setCovariance(wheel_cov);
   /// Set Covariance Of State Model
 
-
-
- 
  
   Kalman::ExtendedKalmanFilter<State> predictor;
   Kalman::ExtendedKalmanFilter<State> ekf;
@@ -107,20 +124,26 @@ int main() {
   std::vector ox = csv.GetColumn<float>(4);
   std::vector oy = csv.GetColumn<float>(5);
   std::vector oth = csv.GetColumn<float>(6);
-  std::vector ovx = csv.GetColumn<float>(7);
-  std::vector ovy = csv.GetColumn<float>(8);
-  std::vector ow = csv.GetColumn<float>(9);
+  // std::vector ovx = csv.GetColumn<float>(7);
+  // std::vector ovy = csv.GetColumn<float>(8);
+  // std::vector ow = csv.GetColumn<float>(9);
+
+
+  std::vector o_l = csv.GetColumn<float>(4);
+  std::vector o_r = csv.GetColumn<float>(5);
+  std::vector o_m = csv.GetColumn<float>(6);
+
 
 
   std::vector iy  = csv.GetColumn<float>(12);
   std::vector iax = csv.GetColumn<float>(13);
   std::vector iay = csv.GetColumn<float>(14);
 
-
+  char c;
 
   double time = 0.01;
 
-  for (int i = 22; i < rx.size() ; i++) {
+  for (int i = 55; i < rx.size() ; i++) {
 
     time = t[i] - t[i-1];
 
@@ -129,22 +152,20 @@ int main() {
     auto x_ekf = ekf.predict(sys, twist, time);
     auto x_pred = predictor.predict(sys, twist, time);
 
-
-    // Odom measurement
+    // Wheel Measurement
     {
-      // We can measure the orientation every 5th step
-      OdomMeasurement odom;
-      // Measurement is affected by noise as well
-      odom.theta() = oth[i];
-      odom.omega() = ow[i];
-      odom.x() = ox[i];
-      odom.y() = oy[i];
-      odom.vx() = ovx[i];
-      odom.vy() = ovy[i];
-      
-      // update EKF
-      x_ekf = ekf.update(odom_model, odom, time);
-            
+      WheelMeasurement wheel;
+
+      wheel.omega_r() = o_r[i];
+      wheel.omega_l() = o_m[i];
+      wheel.omega_m() = o_l[i];
+
+      // std::cout << "WHEEEEELLLLL    " << std::endl;
+      // std::cout << "or: " << o_r[i] << " om: " << o_m[i] << "ol: " << o_l[i] << std::endl;
+      // std::cin >> c;
+
+      ekf.update(wheel_model, wheel, time);
+
     }
 
     // Imu Measurement
