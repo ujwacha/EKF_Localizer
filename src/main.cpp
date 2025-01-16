@@ -13,11 +13,14 @@
 #include "rapidcsv.h"
 #include "ThreeWheel.hpp"
 
+#include "TFMiniMeasurementModek.hpp"
+
 
 #define MID_RADIUS 0.235
 #define RIGHT_RADIUS 0.32
 #define LEFT_RADIUS 0.165
 #define WHEEL_D 0.0574
+//#define WHEEL_D 0.0474
 
 
 
@@ -32,11 +35,12 @@ typedef Robot::SystemModel<T> SystemModel;
 typedef Robot::OdomMeasurement<T> OdomMeasurement;
 typedef Robot::ImuMeasurement<T> ImuMeasurement;
 typedef Robot::WheelMeasurement<T> WheelMeasurement;
+typedef Robot::TFMiniMeasurement<T> TFMiniMeasurement;
 
 typedef Robot::OdomMeasurementModel<T> OdomMeasurementModel;
 typedef Robot::ImuMeasurementModel<T> ImuMeasurementModel;
 typedef Robot::WheelMeasurementModel<T> WheelMeasurementModel;
-
+typedef Robot::TFMiniMeasurementModel<T> TFMiniMeasurementModel;
 
 
 template <typename T>
@@ -63,21 +67,28 @@ int main() {
   ImuMeasurementModel imu_model;
   WheelMeasurementModel wheel_model(LEFT_RADIUS, RIGHT_RADIUS, MID_RADIUS, WHEEL_D / 2);
   SystemModel sys;
+  TFMiniMeasurementModel mini(0, 0.2, PI/2, 0.2, -PI/2, 0.2, 4, 7);
 
   Kalman::Covariance<OdomMeasurement> odom_cov;
   Kalman::Covariance<ImuMeasurement> imu_cov;
   Kalman::Covariance<WheelMeasurement> wheel_cov;
+  Kalman::Covariance<State> state_cov;
 
+  state_cov.setIdentity();
 
-  wheel_cov(WheelMeasurement::OMEGA_L, WheelMeasurement::OMEGA_L) = 0.001;
-  wheel_cov(WheelMeasurement::OMEGA_R, WheelMeasurement::OMEGA_L) = 0.001;
-  wheel_cov(WheelMeasurement::OMEGA_M, WheelMeasurement::OMEGA_L) = 0.001;
+  state_cov(State::VX, State::VX) = 4;
+  state_cov(State::VY, State::VY) = 4;
+  state_cov(State::OMEGA, State::OMEGA) = 4;
+
+  wheel_cov(WheelMeasurement::OMEGA_L, WheelMeasurement::OMEGA_L) = 0.00001;
+  wheel_cov(WheelMeasurement::OMEGA_R, WheelMeasurement::OMEGA_L) = 0.00001;
+  wheel_cov(WheelMeasurement::OMEGA_M, WheelMeasurement::OMEGA_L) = 0.00001;
 
   
 
-  imu_cov(ImuMeasurement::AX, ImuMeasurement::AX) = 1;
-  imu_cov(ImuMeasurement::AY, ImuMeasurement::AY) = 1;
-  imu_cov(ImuMeasurement::YAW, ImuMeasurement::YAW) = 0.00000000001;
+  imu_cov(ImuMeasurement::AX, ImuMeasurement::AX) = 0.7;
+  imu_cov(ImuMeasurement::AY, ImuMeasurement::AY) = 0.7;
+  imu_cov(ImuMeasurement::YAW, ImuMeasurement::YAW) = 0.001;
 
 
   odom_cov(OdomMeasurement::X, OdomMeasurement::X) = 100;
@@ -97,6 +108,7 @@ int main() {
   odom_model.setCovariance(odom_cov);
   imu_model.setCovariance(imu_cov);
   wheel_model.setCovariance(wheel_cov);
+  sys.setCovariance(state_cov);
   /// Set Covariance Of State Model
 
  
