@@ -22,7 +22,7 @@ plot "data.csv" using 1:10 with linespoints title "Angle"
 
 
 pause -1 "Press any key to close the window..."
-plot "data.csv" using 5:6 with linespoints title "X-Y Kalman "
+plot "data.csv" using 6:5 with linespoints title "X-Y Kalman "
 
 pause -1 "Press any key to close the window..."
 plot "data.csv" using 1:7 with linespoints title "Angle Kalman"
