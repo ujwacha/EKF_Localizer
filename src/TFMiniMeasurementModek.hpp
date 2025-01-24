@@ -1,9 +1,10 @@
 #include "kalman/Matrix.hpp"
 #include "kalman/StandardBase.hpp"
 #include <cstddef>
+#include <ostream>
 
 #include "kalman/LinearizedMeasurementModel.hpp"
-#include "Distance.hpp"
+#include "Distance_Bet.hpp"
 
 #define PI 3.1415
 
@@ -40,7 +41,7 @@ namespace Robot {
     //! Measurement type shortcut definition
     typedef TFMiniMeasurement<T> M;
 
-    mutable Distance<T> d1, d2, d3;
+    mutable RobotSensorKalman<T> d1, d2, d3;
 
  
     TFMiniMeasurementModel(T angle1_, T r1_, T angle2_, T r2_, T angle3_, T r3_, T l_, T b_):
@@ -56,27 +57,42 @@ namespace Robot {
     M h(const S& x) const {
       M measurement;
 
-      measurement.d1() = d1.get_distance(x.x(), x.y(), x.theta());
-      measurement.d2() = d2.get_distance(x.x(), x.y(), x.theta());
-      measurement.d3() = d3.get_distance(x.x(), x.y(), x.theta());
+      std::cout << "KF THINKS: " << std::endl;
+
+      std::cout << "x: " << x.x() << std::endl
+		<< "y: " << x.y() << std::endl
+		<< "th: " << x.theta() << std::endl << std::endl;
+      
+      std::cout 
+	<< "d1:" << d1.calculate(x.x(), x.y(), x.theta()).distance << std::endl
+	<< "d2:" << d2.calculate(x.x(), x.y(), x.theta()).distance << std::endl
+	<< "d2:" << d3.calculate(x.x(), x.y(), x.theta()).distance << std::endl
+	<< std::endl;
+
+      measurement.d1() = d1.calculate(x.x(), x.y(), x.theta()).distance;
+      measurement.d2() = d2.calculate(x.x(), x.y(), x.theta()).distance;
+      measurement.d3() = d3.calculate(x.x(), x.y(), x.theta()).distance;
 
       return measurement;
     }
 
-    void updateJacobians( const S& x )
+    void updateJacobians(const S& x, const double t = 0.05)
     {
+
+      std::cout << "MINI UPDATE" << std::endl;
+
       this->H.setZero();
-      this->H(M::D1, S::X) = d1.get_dx();
-      this->H(M::D1, S::Y) = d1.get_dy();
-      this->H(M::D1, S::THETA) = d1.get_dth();
+      this->H(M::D1, S::X) = d1.calculate(x.x(), x.y(), x.theta()).dx;
+      this->H(M::D1, S::Y) = d1.calculate(x.x(), x.y(), x.theta()).dy;
+      this->H(M::D1, S::THETA) = d1.calculate(x.x(), x.y(), x.theta()).dtheta;
 
-      this->H(M::D2, S::X) = d2.get_dx();
-      this->H(M::D2, S::Y) = d2.get_dy();
-      this->H(M::D2, S::THETA) = d2.get_dth();
+      this->H(M::D2, S::X) = d2.calculate(x.x(), x.y(), x.theta()).dx;
+      this->H(M::D2, S::Y) = d2.calculate(x.x(), x.y(), x.theta()).dy;
+      this->H(M::D2, S::THETA) = d2.calculate(x.x(), x.y(), x.theta()).dtheta;
 
-      this->H(M::D3, S::X) = d3.get_dx();
-      this->H(M::D3, S::Y) = d3.get_dy();
-      this->H(M::D3, S::THETA) = d3.get_dth();
+      this->H(M::D3, S::X) = d3.calculate(x.x(), x.y(), x.theta()).dx;
+      this->H(M::D3, S::Y) = d3.calculate(x.x(), x.y(), x.theta()).dy;
+      this->H(M::D3, S::THETA) = d3.calculate(x.x(), x.y(), x.theta()).dtheta;
     }
   
   };

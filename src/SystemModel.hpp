@@ -137,6 +137,7 @@ protected:
       
 
       // F = df/dx (Jacobian of state transition w.r.t. the state)
+      
       this->F.setZero();
 
       std::cout << "SYSTEM JACOBIAN UPDATED" << std::endl;

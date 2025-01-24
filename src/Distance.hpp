@@ -50,7 +50,7 @@ public:
     tem_y = y;
     tem_theta = theta;
 
-    T d;
+    T d = 0;
     switch (w) {
     case Wall::L1:
       d = (-x)/std::cos(theta);
@@ -68,7 +68,7 @@ public:
   }
 
   T get_dx() {
-    T d;
+    T d = 0;
     switch (w) {
     case Wall::L1:
       d = -1/std::cos(tem_theta);
@@ -87,7 +87,7 @@ public:
   }
 
   T get_dy() {
-    T d;
+    T d = 0;
     switch (w) {
     case Wall::L1:
       d = 0;
@@ -106,7 +106,7 @@ public:
   }
 
   T get_dth() {
-    T d;
+    T d = 0;
     switch (w) {
     case Wall::L1:
       d = (-tem_x)*((std::sin(tem_theta))/(std::cos(tem_theta) * std::cos(tem_theta)));

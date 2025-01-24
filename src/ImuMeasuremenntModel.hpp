@@ -77,9 +77,6 @@ namespace Robot {
       std::cout << "IMU H is" << std::endl;
       std::cout << this->H << std::endl;
       std::cout << std::endl << std::endl;
-
-
-     
     }
  
   };

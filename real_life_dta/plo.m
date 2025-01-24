@@ -4,36 +4,30 @@ clf
 
 data = csvread("10-rot.csv");
 
+% Parameters
+Fs = 100;           % Sampling frequency (Hz)
+t = 0:1/Fs:1;        % Time vector (1 second)
+Fc = 50;             % Cutoff frequency (Hz)
+
+
+% Design filter
+d = designfilt('lowpassiir', ...
+    'FilterOrder', 6, ...
+    'HalfPowerFrequency', Fc, ...
+    'SampleRate', Fs);
+
+
 vec = data(:,13);
 
+omega_m = filtfilt(d,data(:,7));
+omega_l = filtfilt(d,data(:,5));
+omega_r = filtfilt(d,data(:,6));
+time = data(:,1);
 
 
-%vec = vec .* 3.1415;
-%vec = vec ./ 180;
-
-## for i=(1:length(vec))
-##  xd = data(1:i,1);
-##  yd = data(1:i,5);
-##  ad = data(1:i,6);
-##  bd = data(1:i,7);
-##  clf
-##  plot(xd, yd, "red");
-##  hold on
-##  plot(xd, ad, "blue");
-##  plot
-##  plot(xd, bd, "purple");
-##  pause(0.001);
-## end
-
-plot(data(:,1), data(:,14), "red")
+plot(time, omega_l, "red")
 hold on
-plot(data(:,1), data(:,15), "blue")
-#hold on
-#plot(data(:,1), data(:,16), "yellow")
-
-% hold on
-% plot(data(:,1), data(:,8))
-
-mean(data(:,16))
-var(data(:,16))
+plot(time, omega_r, "blue")
+hold on
+plot(time, omega_m, "yellow");
 
