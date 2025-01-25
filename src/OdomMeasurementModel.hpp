@@ -7,25 +7,13 @@
 namespace Robot {
   
 
-  template <typename T> class OdomMeasurement : public Kalman::Vector<T, 6> {
+  template <typename T> class OdomMeasurement : public Kalman::Vector<T, 3> {
   public:
-    KALMAN_VECTOR(OdomMeasurement, T, 6)
+    KALMAN_VECTOR(OdomMeasurement, T, 3)
 
-    static constexpr std::size_t X = 0;
-    static constexpr std::size_t Y = 1;
-    static constexpr std::size_t THETA = 2;
-    static constexpr std::size_t VX = 3;
-    static constexpr std::size_t VY = 4;
-    static constexpr std::size_t OMEGA = 5;
-
-    T x() const { return (*this)[X]; }
-    T &x() { return (*this)[X]; }
-
-    T y() const { return (*this)[Y]; }
-    T &y() { return (*this)[Y]; }
-
-    T theta() const { return (*this)[THETA]; }
-    T &theta() { return (*this)[THETA]; }
+    static constexpr std::size_t VX = 0;
+    static constexpr std::size_t VY = 1;
+    static constexpr std::size_t OMEGA = 2;
 
     T vx() const { return (*this)[VX]; }
     T &vx() { return (*this)[VX]; }
@@ -59,10 +47,6 @@ namespace Robot {
     M h(const S& x) const {
       M measurement;
     
-      measurement.x() = x.x();
-      measurement.y() = x.y();
-      measurement.theta() = x.theta();
-
       // Robot Frame = something * Lab frame
       // conversion: Lab to robot
       
@@ -80,12 +64,7 @@ namespace Robot {
 
       this->H.setZero();
 
-      this->H(M::X, S::X) = 1;
-      this->H(M::Y, S::Y) = 1;
-      this->H(M::THETA, S::THETA) = 1;
       this->H(M::OMEGA, S::OMEGA) = 1;
-
-
       // Robot Frame = something * Lab frame
       // conversion: Lab to robot
       this->H(M::VX, S::THETA) = -std::sin(x.theta())*x.vx() + std::cos(x.theta())*x.vy();

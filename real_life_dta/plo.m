@@ -14,13 +14,13 @@ data = csvread("10-rot.csv");
 
 % Parameters
 Fs = 100;           % Sampling frequency (Hz)
-t = 0:1/Fs:1;        % Time vector (1 second)
-Fc = 7;             % Cutoff frequency (Hz)
+%t = 0:1/Fs:1; % Time vector (1 second)
+Fc = 3;             % Cutoff frequency (Hz)
 
 
 % Design filter
 d = designfilt('lowpassiir', ...
-    'FilterOrder', 6, ...
+    'FilterOrder', 1, ...
     'HalfPowerFrequency', Fc, ...
     'SampleRate', Fs);
 

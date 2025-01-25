@@ -15,6 +15,7 @@
 #include "ThreeWheel.hpp"
 
 #include "TFMiniMeasurementModek.hpp"
+#include "LowPassFilter.hpp"
 
 
 #define MID_RADIUS 0.235
@@ -61,8 +62,8 @@ int main() {
   State state;
   state.setZero();
 
-  // state.x() = 3;
-  // state.y() = 1;
+  state.x() = 4.7;
+  state.y() = 3.11;
 
   Twist twist;
 
@@ -71,7 +72,7 @@ int main() {
   ImuMeasurementModel imu_model;
   WheelMeasurementModel wheel_model(LEFT_RADIUS, RIGHT_RADIUS, MID_RADIUS, WHEEL_D / 2);
   SystemModel sys;
-  TFMiniMeasurementModel mini(0, 0.2, PI/2, 0.2, -PI/2, 0.2, 4, 7.5);
+  TFMiniMeasurementModel mini(0, 0.3, PI/2, 0.3, -PI/2, 0.3, 4, 7.5);
   //TFMiniMeasurementModel mini(PI/2, 0.2, 0, 0.2, -PI/2, 0.2, 4, 7.5);
 
   Kalman::Covariance<OdomMeasurement> odom_cov;
@@ -92,9 +93,9 @@ int main() {
   wheel_cov(WheelMeasurement::OMEGA_M, WheelMeasurement::OMEGA_L) = 1;
 
 
-  tf_cov(TFMiniMeasurement::D1, TFMiniMeasurement::D1) = 30;
-  tf_cov(TFMiniMeasurement::D2, TFMiniMeasurement::D2) = 30;
-  tf_cov(TFMiniMeasurement::D3, TFMiniMeasurement::D3) = 30;
+  tf_cov(TFMiniMeasurement::D1, TFMiniMeasurement::D1) = 0.1;
+  tf_cov(TFMiniMeasurement::D2, TFMiniMeasurement::D2) = 0.1;
+  tf_cov(TFMiniMeasurement::D3, TFMiniMeasurement::D3) = 0.1;
 
 
   imu_cov(ImuMeasurement::AX, ImuMeasurement::AX) = 0.7;
@@ -102,9 +103,9 @@ int main() {
   imu_cov(ImuMeasurement::YAW, ImuMeasurement::YAW) = 0.001;
 
 
-  odom_cov(OdomMeasurement::X, OdomMeasurement::X) = 100;
-  odom_cov(OdomMeasurement::Y, OdomMeasurement::Y) = 100;
-  odom_cov(OdomMeasurement::THETA, OdomMeasurement::THETA) = 0.1;
+  // odom_cov(OdomMeasurement::X, OdomMeasurement::X) = 100;
+  // odom_cov(OdomMeasurement::Y, OdomMeasurement::Y) = 100;
+  // odom_cov(OdomMeasurement::THETA, OdomMeasurement::THETA) = 0.1;
 
   // odom_cov(OdomMeasurement::VX, OdomMeasurement::VX) = 0.000625;
   // odom_cov(OdomMeasurement::VY, OdomMeasurement::VY) = 0.003;
@@ -163,13 +164,17 @@ int main() {
   std::vector iax = csv.GetColumn<float>(13);
   std::vector iay = csv.GetColumn<float>(14);
 
-  std::vector dm = csv.GetColumn<float>(15);
-  std::vector dr = csv.GetColumn<float>(16);
-  std::vector dl = csv.GetColumn<float>(17);
+  std::vector dm = csv.GetColumn<float>(16);
+  std::vector dr = csv.GetColumn<float>(17);
+  std::vector dl = csv.GetColumn<float>(18);
 
   char c;
 
   double time = 0.01;
+
+  LowPassFilter low_pass_right(5.0, 0.01f);
+  LowPassFilter low_pass_left(5.0, 0.01f);
+  LowPassFilter low_pass_mid(5.0, 0.01f);
 
   for (int i = 00; i < rx.size() ; i++) {
 
@@ -181,21 +186,54 @@ int main() {
     auto x_pred = predictor.predict(sys, twist, time);
 
     // Wheel Measurement
+    // {
+    //   WheelMeasurement wheel;
+
+    //   wheel.omega_r() = o_r[i];
+    //   wheel.omega_l() = o_m[i];
+    //   wheel.omega_m() = o_l[i];
+
+    //   // std::cout << "WHEEEEELLLLL    " << std::endl;
+    //   // std::cout << "or: " << o_r[i] << " om: " << o_m[i] << "ol: " << o_l[i] << std::endl;
+    //   // std::cin >> c;
+
+    //   x_ekf = ekf.update(wheel_model, wheel, time);
+
+    // }
+    // Odom 
     {
-      WheelMeasurement wheel;
+      // double omega_r = low_pass_right.update(o_r[i]);
+      // double omega_l = low_pass_left.update(o_m[i]);
+      // double omega_m = low_pass_mid.update(o_l[i]);
 
-      wheel.omega_r() = o_r[i];
-      wheel.omega_l() = o_m[i];
-      wheel.omega_m() = o_l[i];
+      double omega_r = o_r[i];
+      double omega_l = o_l[i];
+      double omega_m = o_m[i];
 
-      // std::cout << "WHEEEEELLLLL    " << std::endl;
-      // std::cout << "or: " << o_r[i] << " om: " << o_m[i] << "ol: " << o_l[i] << std::endl;
-      // std::cin >> c;
+      double back_vel = omega_m * WHEEL_D / 2.0f;
+      double right_vel = omega_r * WHEEL_D / 2.0f;
+      double left_vel = omega_l * WHEEL_D / 2.0f;
+      
+      double omega = (right_vel - left_vel) / (RIGHT_RADIUS + LEFT_RADIUS);
+      double vx = (right_vel * LEFT_RADIUS + left_vel * RIGHT_RADIUS) / (RIGHT_RADIUS + LEFT_RADIUS);
+      double vy = back_vel - omega * MID_RADIUS; // might have to change it to + or minus for better results
 
-      ekf.update(wheel_model, wheel, time);
+      OdomMeasurement mea;
+      
+      mea.vx() = vx;
+      mea.vy() = vy;
+      mea.omega() = omega;
 
+      if (i % 100 == 0) {
+
+	std::cout << "MEASSS " << std::endl << std::endl << "vx: "  << vx << std::endl << "vy: " << vy << std::endl << "omega: " << omega << std::endl << "ENDDDD" << std::endl;
+
+	//	std::cin >> c;
+	
+      }
+
+      x_ekf = ekf.update(odom_model, mea, time);
     }
-
 
     // Imu Measurement
     {
@@ -215,21 +253,18 @@ int main() {
     {
       TFMiniMeasurement min;
       min.d1() = dm[i]/100;
-      min.d2() = dl[i]/100;
-      min.d3() = dr[i]/100;
+      min.d3() = dl[i]/100;
+      min.d2() = dr[i]/100;
 
       std::cout << "REAL d1 : " << min.d1() << std::endl
 		<< "REAL d2 : " << min.d2() << std::endl
 		<< "REAL d3 : " << min.d3() << std::endl;
 
 
-      if (i % 30 == 0 || i < 250) {
+      // if (i % 10 == 0 || i < 250) 
 
-	x_ekf = ekf.update(mini, min);
-	std::cin >> c;
+      x_ekf = ekf.update(mini, min, time);
 
-
-      }
     }
 
     fs << i << "," << x_ekf.vx() << "," << x_ekf.vy() << ","<< state.theta() << ","
@@ -237,7 +272,7 @@ int main() {
        << x_pred.x() << "," << x_pred.y() << "," << x_pred.theta() 
        << "," << ox[i] << "," << oy[i] << "," << oth[i] << "," << iy[i] << std::endl;
     
-
+    
     
     
     twist.romega() = rw[i];

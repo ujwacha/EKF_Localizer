@@ -13,7 +13,8 @@ find_package(Eigen3 REQUIRED)
 
 # Define source files
 set(SOURCE_FILES
-    src/main.cpp
+  src/main.cpp
+  LowPassFilter/LowPassFilter.cpp
 )
 
 # Define include directories
@@ -21,6 +22,7 @@ include_directories(
   kalman/include
   /usr/include/eigen3/
   rapidcsv/src
+  LowPassFilter/
 )
 
 #### C-M-j Ivy immediate done. remembre this

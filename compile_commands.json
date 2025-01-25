@@ -5,8 +5,7 @@
       "-I/home/light/robocon2025/git-clones/EKF_Localizer/kalman/include",
       "-I/usr/include/eigen3",
       "-I/home/light/robocon2025/git-clones/EKF_Localizer/rapidcsv/src",
-      "-O3",
-      "-DNDEBUG",
+      "-I/home/light/robocon2025/git-clones/EKF_Localizer/LowPassFilter",
       "-std=c++17",
       "-Wall",
       "-Wextra",
@@ -19,5 +18,25 @@
     "directory": "/home/light/robocon2025/git-clones/EKF_Localizer/build",
     "file": "/home/light/robocon2025/git-clones/EKF_Localizer/src/main.cpp",
     "output": "/home/light/robocon2025/git-clones/EKF_Localizer/build/CMakeFiles/EKF_Localizer.dir/src/main.cpp.o"
+  },
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-I/home/light/robocon2025/git-clones/EKF_Localizer/kalman/include",
+      "-I/usr/include/eigen3",
+      "-I/home/light/robocon2025/git-clones/EKF_Localizer/rapidcsv/src",
+      "-I/home/light/robocon2025/git-clones/EKF_Localizer/LowPassFilter",
+      "-std=c++17",
+      "-Wall",
+      "-Wextra",
+      "-Wconversion",
+      "-c",
+      "-o",
+      "CMakeFiles/EKF_Localizer.dir/LowPassFilter/LowPassFilter.cpp.o",
+      "/home/light/robocon2025/git-clones/EKF_Localizer/LowPassFilter/LowPassFilter.cpp"
+    ],
+    "directory": "/home/light/robocon2025/git-clones/EKF_Localizer/build",
+    "file": "/home/light/robocon2025/git-clones/EKF_Localizer/LowPassFilter/LowPassFilter.cpp",
+    "output": "/home/light/robocon2025/git-clones/EKF_Localizer/build/CMakeFiles/EKF_Localizer.dir/LowPassFilter/LowPassFilter.cpp.o"
   }
 ]
