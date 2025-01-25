@@ -223,11 +223,13 @@ int main() {
 		<< "REAL d3 : " << min.d3() << std::endl;
 
 
-      //      if (i % 30 == 0 || i < 250)
-      // x_ekf = ekf.update(mini, min);
+      if (i % 30 == 0 || i < 250) {
 
-      // std::cin >> c;
+	x_ekf = ekf.update(mini, min);
+	std::cin >> c;
 
+
+      }
     }
 
     fs << i << "," << x_ekf.vx() << "," << x_ekf.vy() << ","<< state.theta() << ","
