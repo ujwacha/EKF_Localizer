@@ -13,8 +13,9 @@
 #include "kalman/Types.hpp"
 #include "rapidcsv.h"
 #include "ThreeWheel.hpp"
-
 #include "TFMiniMeasurementModek.hpp"
+
+#include "filter.h"
 
 #define MID_RADIUS 0.235
 

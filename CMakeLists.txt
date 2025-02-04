@@ -22,7 +22,6 @@ include_directories(
   kalman/include
   /usr/include/eigen3/
   rapidcsv/src
-  LowPassFilter/
 )
 
 #### C-M-j Ivy immediate done. remembre this
