@@ -4,6 +4,3 @@
 [submodule "rapidcsv"]
 	path = rapidcsv
 	url = https://github.com/d99kris/rapidcsv.git
-[submodule "LowPassFilter"]
-	path = LowPassFilter
-	url = https://github.com/jimmyberg/LowPassFilter.git
