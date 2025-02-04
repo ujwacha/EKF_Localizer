@@ -15,8 +15,6 @@
 #include "ThreeWheel.hpp"
 
 #include "TFMiniMeasurementModek.hpp"
-#include "LowPassFilter.hpp"
-
 
 #define MID_RADIUS 0.235
 
@@ -189,10 +187,6 @@ int main() {
 
   double time = 0.01;
 
-  LowPassFilter low_pass_right(5.0, 0.01f);
-  LowPassFilter low_pass_left(5.0, 0.01f);
-  LowPassFilter low_pass_mid(5.0, 0.01f);
-
   for (int i = 00; i < rx.size() ; i++) {
 
     time = t[i] - t[i-1];
@@ -219,10 +213,6 @@ int main() {
     // }
     // Odom 
     {
-      // double omega_r = low_pass_right.update(o_r[i]);
-      // double omega_l = low_pass_left.update(o_m[i]);
-      // double omega_m = low_pass_mid.update(o_l[i]);
-
       double omega_r = o_r[i];
       double omega_l = o_l[i];
       double omega_m = o_m[i];
