@@ -3,7 +3,7 @@ clc
 clear
 clf
 
-data = csvread("../real_life_dat/10_rot.csv");
+data = csvread("../real_life_dat/10_rotls.csv");
 
 %for i=(50:length(data))
 

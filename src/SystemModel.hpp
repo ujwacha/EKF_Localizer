@@ -140,7 +140,7 @@ protected:
       
       this->F.setZero();
 
-      std::cout << "SYSTEM JACOBIAN UPDATED" << std::endl;
+      // std::cout << "SYSTEM JACOBIAN UPDATED" << std::endl;
 
 
       // First Set the ones that are 1
@@ -184,11 +184,11 @@ protected:
       this->F(S::X, S::AX) = 0.5*t*t;
       this->F(S::Y, S::AY) = 0.5*t*t;
 
-      std::cout << "JACCC" << std::endl;
+      // std::cout << "JACCC" << std::endl;
 
-      std::cout << this->F << std::endl;
+      // std::cout << this->F << std::endl;
 
-      std::cout << "JACCC END" << std::endl;
+      // std::cout << "JACCC END" << std::endl;
 
       // W = df/dw (Jacobian of state transition w.r.t. the noise)
       // this->W.setIdentity();

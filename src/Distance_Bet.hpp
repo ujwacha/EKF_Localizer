@@ -86,7 +86,7 @@ public:
 
   void print_res(SensorResult s) {
     
-    std::cout << "RESULT{dis: " << s.distance << ", dx: " << s.dx << ", dy: " << s.dy << ", dth: " << s.dtheta << " } : " <<  std::endl;
+    // std::cout << "RESULT{dis: " << s.distance << ", dx: " << s.dx << ", dy: " << s.dy << ", dth: " << s.dtheta << " } : " <<  std::endl;
     
   }
 };

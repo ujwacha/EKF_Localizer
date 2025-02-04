@@ -57,17 +57,17 @@ namespace Robot {
     M h(const S& x) const {
       M measurement;
 
-      std::cout << "KF THINKS: " << std::endl;
+      // std::cout << "KF THINKS: " << std::endl;
 
-      std::cout << "x: " << x.x() << std::endl
-		<< "y: " << x.y() << std::endl
-		<< "th: " << x.theta() << std::endl << std::endl;
+      // std::cout << "x: " << x.x() << std::endl
+      // 		<< "y: " << x.y() << std::endl
+      // 		<< "th: " << x.theta() << std::endl << std::endl;
       
-      std::cout 
-	<< "d1:" << d1.calculate(x.x(), x.y(), x.theta()).distance << std::endl
-	<< "d2:" << d2.calculate(x.x(), x.y(), x.theta()).distance << std::endl
-	<< "d2:" << d3.calculate(x.x(), x.y(), x.theta()).distance << std::endl
-	<< std::endl;
+      // std::cout 
+      // 	<< "d1:" << d1.calculate(x.x(), x.y(), x.theta()).distance << std::endl
+      // 	<< "d2:" << d2.calculate(x.x(), x.y(), x.theta()).distance << std::endl
+      // 	<< "d2:" << d3.calculate(x.x(), x.y(), x.theta()).distance << std::endl
+      // 	<< std::endl;
 
       measurement.d1() = d1.calculate(x.x(), x.y(), x.theta()).distance;
       measurement.d2() = d2.calculate(x.x(), x.y(), x.theta()).distance;
@@ -79,7 +79,7 @@ namespace Robot {
     void updateJacobians(const S& x, const double t = 0.05)
     {
 
-      std::cout << "MINI UPDATE" << std::endl;
+      // std::cout << "MINI UPDATE" << std::endl;
 
       this->H.setZero();
       this->H(M::D1, S::X) = d1.calculate(x.x(), x.y(), x.theta()).dx;

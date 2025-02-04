@@ -60,7 +60,7 @@ namespace Robot {
 
     void updateJacobians(const S& x, const double t = 0.05) {
 
-      std::cout << "ODOM Jacobian Updated" << std::endl;
+      // std::cout << "ODOM Jacobian Updated" << std::endl;
 
       this->H.setZero();
 

@@ -73,10 +73,10 @@ namespace Robot {
       this->H(M::AY, S::AY) = std::cos(x.theta());
 
 
-      std::cout << "IMU Jacobian Updated" << std::endl;
-      std::cout << "IMU H is" << std::endl;
-      std::cout << this->H << std::endl;
-      std::cout << std::endl << std::endl;
+      // std::cout << "IMU Jacobian Updated" << std::endl;
+      // std::cout << "IMU H is" << std::endl;
+      // std::cout << this->H << std::endl;
+      // std::cout << std::endl << std::endl;
     }
  
   };

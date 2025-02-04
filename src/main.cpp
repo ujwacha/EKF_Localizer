@@ -19,8 +19,13 @@
 
 
 #define MID_RADIUS 0.235
+
+// #define RIGHT_RADIUS 0.2425
+// #define LEFT_RADIUS 0.2425
+
 #define RIGHT_RADIUS 0.32
 #define LEFT_RADIUS 0.165
+
 #define WHEEL_D 0.0574
 //#define WHEEL_D 0.0474
 
@@ -50,7 +55,13 @@ T degreesToRadians(T degrees) {
   return degrees * static_cast<T>(M_PI) / static_cast<T>(180);
 }
 
-		 
+
+double get_cov(double val) {
+  //  return (950 * 0.4 /(val - 65));
+
+  if (val < 850) return 70;
+  else return 0.2;
+}
 
 int main() {
   // Open a file To store the csv file
@@ -168,6 +179,12 @@ int main() {
   std::vector dr = csv.GetColumn<float>(17);
   std::vector dl = csv.GetColumn<float>(18);
 
+  std::vector sm = csv.GetColumn<float>(19);
+  std::vector sr = csv.GetColumn<float>(20);
+  std::vector sl = csv.GetColumn<float>(21);
+
+
+
   char c;
 
   double time = 0.01;
@@ -224,13 +241,14 @@ int main() {
       mea.vy() = vy;
       mea.omega() = omega;
 
-      if (i % 100 == 0) {
+      // if (i % 100 == 0) {
 
-	std::cout << "MEASSS " << std::endl << std::endl << "vx: "  << vx << std::endl << "vy: " << vy << std::endl << "omega: " << omega << std::endl << "ENDDDD" << std::endl;
+	// std::cout << "MEASSS " << std::endl << std::endl << "vx: "  << vx << std::endl << "vy: " << vy << std::endl << "omega: " << omega << std::endl << "ENDDDD" << std::endl;
 
 	//	std::cin >> c;
+      std::cout << vx << " , " << vy << " , "<< omega << std::endl;
 	
-      }
+      // }
 
       x_ekf = ekf.update(odom_model, mea, time);
     }
@@ -256,14 +274,22 @@ int main() {
       min.d3() = dl[i]/100;
       min.d2() = dr[i]/100;
 
-      std::cout << "REAL d1 : " << min.d1() << std::endl
-		<< "REAL d2 : " << min.d2() << std::endl
-		<< "REAL d3 : " << min.d3() << std::endl;
 
 
-      // if (i % 10 == 0 || i < 250) 
+      tf_cov(TFMiniMeasurement::D1, TFMiniMeasurement::D1) = get_cov(sm[i]);
+      tf_cov(TFMiniMeasurement::D3, TFMiniMeasurement::D3) = get_cov(sl[i]);
+      tf_cov(TFMiniMeasurement::D2, TFMiniMeasurement::D2) = get_cov(sr[i]);
 
-      x_ekf = ekf.update(mini, min, time);
+      mini.setCovarianceSquareRoot(tf_cov);
+
+
+      // std::cout << "REAL d1 : " << min.d1() << std::endl
+      // 		<< "REAL d2 : " << min.d2() << std::endl
+      // 		<< "REAL d3 : " << min.d3() << std::endl;
+
+
+      //if (i % 300 == 0 || i < 250) 
+	x_ekf = ekf.update(mini, min, time);
 
     }
 
