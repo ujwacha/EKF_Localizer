@@ -14,6 +14,7 @@
 #include "rapidcsv.h"
 #include "ThreeWheel.hpp"
 #include "TFMiniMeasurementModek.hpp"
+#include <Eigen/Dense>
 
 #include "filter.h"
 
@@ -55,11 +56,41 @@ T degreesToRadians(T degrees) {
 }
 
 
-double get_cov(double val) {
-  //  return (950 * 0.4 /(val - 65));
 
-  if (val < 850) return 70;
-  else return 0.2;
+// Function to rotate a vector using roll (X-axis) and pitch (Y-axis)
+Eigen::Vector3d rotateVector(const Eigen::Vector3d &v, double roll, double pitch) {
+    // Create roll rotation matrix (rotation about X-axis)
+    Eigen::Matrix3d R_roll = Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX()).toRotationMatrix();
+    
+    // Create pitch rotation matrix (rotation about Y-axis)
+    Eigen::Matrix3d R_pitch = Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY()).toRotationMatrix();
+    
+    // Combine the rotations: roll first, then pitch
+    Eigen::Matrix3d R = R_pitch * R_roll;
+    
+    // Apply the rotation to the vector
+    return R * v;
+}
+
+
+double compute_y(double x) {  // this function was generated through least square estimate curve fitting
+    // Evaluate y = 324.9038 - 0.8249779*x + 0.000784277*x^2 - 3.264981e-7*x^3 + 4.990982e-11*x^4
+    // using Horner's method.
+    return 324.9038 + x * (-0.8249779 + x * (0.000784277 + x * (-3.264981e-7 + x * 4.990982e-11)));
+}
+
+
+double get_cov(double val) {
+  // if (val != 70)
+  //   return (1700 * 0.4 /(val - 70));
+  // else return 100;
+
+  if (val < 2000) return 70;
+  //  else return 0.09;
+  //  else return 0.09;
+  else return 2;
+
+  //  return compute_y(val);
 }
 
 int main() {
@@ -72,15 +103,23 @@ int main() {
   State state;
   state.setZero();
 
-  state.x() = 4.7;
-  state.y() = 3.11;
+  state.x() = 1.7;
+  state.y() = 2.11;
 
   Twist twist;
 
 
   OdomMeasurementModel odom_model;
   ImuMeasurementModel imu_model;
-  WheelMeasurementModel wheel_model(LEFT_RADIUS, RIGHT_RADIUS, MID_RADIUS, WHEEL_D / 2);
+
+
+  // Encoder<float> enc1(-MID_RADIUS, 0, 3.14145/2, WHEEL_D/2);
+  // Encoder<float> enc2(0, LEFT_RADIUS, 0, WHEEL_D/2);
+  // Encoder<float> enc3(0, -RIGHT_RADIUS, 0, WHEEL_D/2);
+
+
+  //                                x   y           a  x    y            a   x          y    a        rad 
+  WheelMeasurementModel wheel_model(0, LEFT_RADIUS, 0, 0, -RIGHT_RADIUS, 0, -MID_RADIUS, 0 , PI/2 , WHEEL_D/2);
   SystemModel sys;
   TFMiniMeasurementModel mini(0, 0.3, PI/2, 0.3, -PI/2, 0.3, 4, 7.5);
   //TFMiniMeasurementModel mini(PI/2, 0.2, 0, 0.2, -PI/2, 0.2, 4, 7.5);
@@ -94,13 +133,13 @@ int main() {
   
   state_cov.setIdentity();
 
-  state_cov(State::VX, State::VX) = 1;
-  state_cov(State::VY, State::VY) = 1;
-  state_cov(State::OMEGA, State::OMEGA) = 1;
+  // state_cov(State::VX, State::VX) = 1;
+  // state_cov(State::VY, State::VY) = 1;
+  // state_cov(State::OMEGA, State::OMEGA) = 1;
 
-  wheel_cov(WheelMeasurement::OMEGA_L, WheelMeasurement::OMEGA_L) = 1;
-  wheel_cov(WheelMeasurement::OMEGA_R, WheelMeasurement::OMEGA_L) = 1;
-  wheel_cov(WheelMeasurement::OMEGA_M, WheelMeasurement::OMEGA_L) = 1;
+  wheel_cov(WheelMeasurement::OMEGA_L, WheelMeasurement::OMEGA_L) = 0.1;
+  wheel_cov(WheelMeasurement::OMEGA_R, WheelMeasurement::OMEGA_R) = 0.1;
+  wheel_cov(WheelMeasurement::OMEGA_M, WheelMeasurement::OMEGA_M) = 0.1;
 
 
   tf_cov(TFMiniMeasurement::D1, TFMiniMeasurement::D1) = 0.1;
@@ -108,31 +147,29 @@ int main() {
   tf_cov(TFMiniMeasurement::D3, TFMiniMeasurement::D3) = 0.1;
 
 
-  imu_cov(ImuMeasurement::AX, ImuMeasurement::AX) = 0.7;
-  imu_cov(ImuMeasurement::AY, ImuMeasurement::AY) = 0.7;
-  imu_cov(ImuMeasurement::YAW, ImuMeasurement::YAW) = 0.001;
+  imu_cov(ImuMeasurement::AX, ImuMeasurement::AX) = 1;
+  imu_cov(ImuMeasurement::AY, ImuMeasurement::AY) = 1;
+  imu_cov(ImuMeasurement::YAW, ImuMeasurement::YAW) = 0.01;
 
 
   // odom_cov(OdomMeasurement::X, OdomMeasurement::X) = 100;
   // odom_cov(OdomMeasurement::Y, OdomMeasurement::Y) = 100;
   // odom_cov(OdomMeasurement::THETA, OdomMeasurement::THETA) = 0.1;
 
+  odom_cov(OdomMeasurement::VX, OdomMeasurement::VX) = 0.000625;
+  odom_cov(OdomMeasurement::VY, OdomMeasurement::VY) = 0.003;
+
   // odom_cov(OdomMeasurement::VX, OdomMeasurement::VX) = 0.000625;
   // odom_cov(OdomMeasurement::VY, OdomMeasurement::VY) = 0.003;
+  odom_cov(OdomMeasurement::OMEGA, OdomMeasurement::OMEGA) = 0.1;
 
-  odom_cov(OdomMeasurement::VX, OdomMeasurement::VX) = 0.00000000625;
-  odom_cov(OdomMeasurement::VY, OdomMeasurement::VY) = 0.00000003;
-
-
-
-  odom_cov(OdomMeasurement::OMEGA, OdomMeasurement::OMEGA) = 0.001;
 
   odom_model.setCovariance(odom_cov);
   imu_model.setCovariance(imu_cov);
   wheel_model.setCovariance(wheel_cov);
   mini.setCovariance(tf_cov);
-  /// Set Covariance Of State Model
 
+  /// Set Covariance Of State Model
   sys.setCovariance(state_cov);
  
   Kalman::ExtendedKalmanFilter<State> predictor;
@@ -170,9 +207,12 @@ int main() {
 
 
 
+  std::vector ir  = csv.GetColumn<float>(10);
+  std::vector ip  = csv.GetColumn<float>(11);
   std::vector iy  = csv.GetColumn<float>(12);
   std::vector iax = csv.GetColumn<float>(13);
   std::vector iay = csv.GetColumn<float>(14);
+  std::vector iaz = csv.GetColumn<float>(15);
 
   std::vector dm = csv.GetColumn<float>(16);
   std::vector dr = csv.GetColumn<float>(17);
@@ -186,6 +226,23 @@ int main() {
 
   char c;
 
+  // Set Up 1st order and Second order low pass filters
+  // As and Bs are calculated from GNU octave
+  // Use GNU octave signal package and butter function
+  double omega_bs[2] = {0.086364, 0.086364};
+  double omega_as[2] = {1.0000, -0.8273};
+  filter<1> omega_l_lpf(omega_bs, omega_as);
+  filter<1> omega_r_lpf(omega_bs, omega_as);
+  filter<1> omega_m_lpf(omega_bs, omega_as);
+  filter<1> yaw_lpf(omega_bs, omega_as);
+
+  double accel_bs[3] = {9.4469e-04, 1.8894e-03, 9.4469e-04};
+  double accel_as[3] = {1.0000, -1.9112, 0.9150};
+  filter<2> accel_x_lpf(accel_bs, accel_as);
+  filter<2> accel_y_lpf(accel_bs, accel_as);
+  filter<2> accel_z_lpf(accel_bs, accel_as);
+
+
   double time = 0.01;
 
   for (int i = 00; i < rx.size() ; i++) {
@@ -198,50 +255,50 @@ int main() {
     auto x_pred = predictor.predict(sys, twist, time);
 
     // Wheel Measurement
-    // {
-    //   WheelMeasurement wheel;
+    {
+      WheelMeasurement wheel;
 
-    //   wheel.omega_r() = o_r[i];
-    //   wheel.omega_l() = o_m[i];
-    //   wheel.omega_m() = o_l[i];
+      double omega_r = omega_r_lpf.update(o_r[i]);
+      double omega_l = omega_l_lpf.update(o_l[i]);
+      double omega_m = omega_m_lpf.update(o_m[i]);
 
-    //   // std::cout << "WHEEEEELLLLL    " << std::endl;
-    //   // std::cout << "or: " << o_r[i] << " om: " << o_m[i] << "ol: " << o_l[i] << std::endl;
-    //   // std::cin >> c;
+      wheel.omega_r() = omega_r;
+      wheel.omega_l() = omega_l;
+      wheel.omega_m() = omega_m;
 
-    //   x_ekf = ekf.update(wheel_model, wheel, time);
+      // std::cout << "WHEEEEELLLLL    " << std::endl;
+      std::cout << "or: " << omega_r << " om: " << omega_m << "ol: " << omega_l << std::endl;
 
-    // }
+      x_ekf = ekf.update(wheel_model, wheel, time);
+
+    }
     // Odom 
     {
-      double omega_r = o_r[i];
-      double omega_l = o_l[i];
-      double omega_m = o_m[i];
+      // // double omega_r = o_r[i];
+      // // double omega_l = o_l[i];
+      // // double omega_m = o_m[i];
 
-      double back_vel = omega_m * WHEEL_D / 2.0f;
-      double right_vel = omega_r * WHEEL_D / 2.0f;
-      double left_vel = omega_l * WHEEL_D / 2.0f;
+      // double omega_r = omega_r_lpf.update(o_r[i]);
+      // double omega_l = omega_l_lpf.update(o_l[i]);
+      // double omega_m = omega_m_lpf.update(o_m[i]);
+
+
+
+      // double back_vel = omega_m * WHEEL_D / 2.0f;
+      // double right_vel = omega_r * WHEEL_D / 2.0f;
+      // double left_vel = omega_l * WHEEL_D / 2.0f;
       
-      double omega = (right_vel - left_vel) / (RIGHT_RADIUS + LEFT_RADIUS);
-      double vx = (right_vel * LEFT_RADIUS + left_vel * RIGHT_RADIUS) / (RIGHT_RADIUS + LEFT_RADIUS);
-      double vy = back_vel - omega * MID_RADIUS; // might have to change it to + or minus for better results
-
-      OdomMeasurement mea;
+      // double omega = (right_vel - left_vel) / (RIGHT_RADIUS + LEFT_RADIUS);
+      // double vx = (right_vel * LEFT_RADIUS + left_vel * RIGHT_RADIUS) / (RIGHT_RADIUS + LEFT_RADIUS);
+      // double vy = back_vel + omega * MID_RADIUS; // might have to change it to + or minus for better results
       
-      mea.vx() = vx;
-      mea.vy() = vy;
-      mea.omega() = omega;
+      // OdomMeasurement mea;
+      
+      // mea.vx() = vx;
+      // mea.vy() = vy;
+      // mea.omega() = omega;
 
-      // if (i % 100 == 0) {
-
-	// std::cout << "MEASSS " << std::endl << std::endl << "vx: "  << vx << std::endl << "vy: " << vy << std::endl << "omega: " << omega << std::endl << "ENDDDD" << std::endl;
-
-	//	std::cin >> c;
-      std::cout << vx << " , " << vy << " , "<< omega << std::endl;
-	
-      // }
-
-      x_ekf = ekf.update(odom_model, mea, time);
+      // x_ekf = ekf.update(odom_model, mea, time);
     }
 
     // Imu Measurement
@@ -249,12 +306,40 @@ int main() {
       // We can measure the orientation every 5th step
       ImuMeasurement imu;
       // Measurement is affected by noise as well
-      imu.yaw() = iy[i] ;
-      imu.ax() = iax[i];
-      imu.ay() = iay[i];
+
+      double roll = ir[i];
+      double pitch = ip[i];
+      double yaw = iy[i];
+      double ax = iax[i];
+      double ay = iay[i];
+      double az = iaz[i];
+
+      
+      Eigen::Vector3d accel = {ax, ay, az};
+
+      Eigen::Vector3d rot_accel = rotateVector(accel, roll, pitch);
+
+      
+
+      // imu.yaw() = iy[i];
+      // imu.ax() = accel_x_lpf.update(iax[i]);
+      // imu.ay() = accel_y_lpf.update(iay[i]);
+
+      imu.yaw() = yaw;
+      imu.ax() = accel_x_lpf.update(rot_accel(0));
+      imu.ay() = accel_y_lpf.update(rot_accel(1));
+
+
+      // std::cout << "The accels are  " << rot_accel(0) << " " << rot_accel(1) << " "  << rot_accel(2) << std::endl;
+      std::cout << "roll: " << roll << std::endl;
+      std::cout << "pitch : " << pitch << std::endl;
+      std::cout << "az : " << az << std::endl;
+      std::cout << "accel: " << accel << std::endl;
+      std::cout << "rot_accel: " << rot_accel << std::endl;
+      std::cout << "imu: " << imu << std::endl;
 
       // Update EK// F
-      x_ekf = ekf.update(imu_model, imu, time);
+      //      x_ekf = ekf.update(imu_model, imu, time);
     }
 
 
@@ -280,8 +365,7 @@ int main() {
 
 
       //if (i % 300 == 0 || i < 250) 
-	x_ekf = ekf.update(mini, min, time);
-
+      x_ekf = ekf.update(mini, min, time);
     }
 
     fs << i << "," << x_ekf.vx() << "," << x_ekf.vy() << ","<< state.theta() << ","

@@ -1,5 +1,6 @@
 #include "kalman/Matrix.hpp"
 #include "kalman/StandardBase.hpp"
+#include "wheel.hpp"
 #include <cstddef>
 
 #include "kalman/LinearizedMeasurementModel.hpp"
@@ -37,16 +38,16 @@ namespace Robot {
     //! Measurement type shortcut definition
     typedef WheelMeasurement<T> M;
 
-    T left_radius, right_radius, mid_radius, wheel_radius;
+    // T left_radius, right_radius, mid_radius, wheel_radius;
+    mutable Encoder<T> left, right, mid;
   
-    WheelMeasurementModel(T left_radius_, T right_radius_, T mid_radius_, T wheel_radius_):
-      left_radius(left_radius_),
-      right_radius(right_radius_),
-      mid_radius(mid_radius_),
-      wheel_radius(wheel_radius_)
+    WheelMeasurementModel(T left_x, T left_y, T left_alpha, T right_x, T right_y, T right_alpha, T mid_x, T mid_y, T mid_alpha, T wheel_radius_):
+      left(left_x, left_y, left_alpha, wheel_radius_),
+      right(right_x, right_y, right_alpha, wheel_radius_),
+      mid(mid_x, mid_y, mid_alpha, wheel_radius_)
     {
 
-      std::cout << "left_rad : " << left_radius << " rignt_rad: " << right_radius << "mid_radius: " << mid_radius << "wheel_rad " << wheel_radius << std::endl;
+      //      std::cout << "left_rad : " << left_radius << " rignt_rad: " << right_radius << "mid_radius: " << mid_radius << "wheel_rad " << wheel_radius << std::endl;
       // Setup jacobians. As these are static, we can define them once
       // and do not need to update them dynamically
 
@@ -58,18 +59,11 @@ namespace Robot {
   
     M h(const S& x) const {
       M measurement;
+      measurement.omega_l() = left.calculate(x.theta(), x.vx(), x.vy(), x.omega()).omega;
+      measurement.omega_r() = right.calculate(x.theta(), x.vx(), x.vy(), x.omega()).omega;
+      measurement.omega_m() = mid.calculate(x.theta(), x.vx(), x.vy(), x.omega()).omega;
 
-      T vxr = std::cos(x.theta())*x.vx() + std::sin(x.theta())*x.vy();
-      T vyr = -std::sin(x.theta())*x.vx() + std::cos(x.theta())*x.vy();
-
-      measurement.omega_l() = vxr - this->left_radius*x.omega();
-      measurement.omega_r() = vxr + this->right_radius*x.omega();
-      measurement.omega_m() = vyr - this->mid_radius*x.omega();
-
-      measurement.omega_l() /= this->wheel_radius;
-      measurement.omega_r() /= this->wheel_radius;
-      measurement.omega_m() /= this->wheel_radius;
-
+      std::cout << "Measurement Is " << std::endl << measurement << std::endl;
 
       return measurement;
     }
@@ -83,30 +77,30 @@ namespace Robot {
 
       this->H(M::OMEGA_L, S::X) = 0;
       this->H(M::OMEGA_L, S::Y) = 0;
-      this->H(M::OMEGA_L, S::THETA) = (-std::sin(x.theta())*x.vx() + std::cos(x.theta())*x.vy()) / this->wheel_radius;
-      this->H(M::OMEGA_L, S::VX) = std::cos(x.theta()) / this->wheel_radius;
-      this->H(M::OMEGA_L, S::VY) = std::sin(x.theta()) / this->wheel_radius;
-      this->H(M::OMEGA_L, S::OMEGA) = -this->left_radius /  this->wheel_radius;
+      this->H(M::OMEGA_L, S::THETA) = left.calculate(x.theta(), x.vx(), x.vy(), x.omega()).dtheta;
+      this->H(M::OMEGA_L, S::VX) = left.calculate(x.theta(), x.vx(), x.vy(), x.omega()).dvx;
+      this->H(M::OMEGA_L, S::VY) = left.calculate(x.theta(), x.vx(), x.vy(), x.omega()).dvy;
+      this->H(M::OMEGA_L, S::OMEGA) = left.calculate(x.theta(), x.vx(), x.vy(), x.omega()).domega;
       this->H(M::OMEGA_L, S::AX) = 0;
       this->H(M::OMEGA_L, S::AY) = 0;
 
 
       this->H(M::OMEGA_R, S::X) = 0;
       this->H(M::OMEGA_R, S::Y) = 0;
-      this->H(M::OMEGA_R, S::THETA) = (-std::sin(x.theta())*x.vx() + std::cos(x.theta())*x.vy()) / this->wheel_radius;
-      this->H(M::OMEGA_R, S::VX) = std::cos(x.theta()) / this->wheel_radius;
-      this->H(M::OMEGA_R, S::VY) = std::sin(x.theta()) / this->wheel_radius;
-      this->H(M::OMEGA_R, S::OMEGA) = this->right_radius /  this->wheel_radius;
+      this->H(M::OMEGA_R, S::THETA) = right.calculate(x.theta(), x.vx(), x.vy(), x.omega()).dtheta;
+      this->H(M::OMEGA_R, S::VX) = right.calculate(x.theta(), x.vx(), x.vy(), x.omega()).dvx;
+      this->H(M::OMEGA_R, S::VY) = right.calculate(x.theta(), x.vx(), x.vy(), x.omega()).dvy;
+      this->H(M::OMEGA_R, S::OMEGA) = right.calculate(x.theta(), x.vx(), x.vy(), x.omega()).domega;
       this->H(M::OMEGA_R, S::AX) = 0;
       this->H(M::OMEGA_R, S::AY) = 0;
 
 
       this->H(M::OMEGA_M, S::X) = 0;
       this->H(M::OMEGA_M, S::Y) = 0;
-      this->H(M::OMEGA_M, S::THETA) = (-std::cos(x.theta())*x.vx() - std::sin(x.theta())*x.vy()) / this->wheel_radius;
-      this->H(M::OMEGA_M, S::VX) = -std::sin(x.theta()) / this->wheel_radius;
-      this->H(M::OMEGA_M, S::VY) = std::cos(x.theta()) / this->wheel_radius;
-      this->H(M::OMEGA_M, S::OMEGA) = -this->mid_radius /  this->wheel_radius;
+      this->H(M::OMEGA_M, S::THETA) = mid.calculate(x.theta(), x.vx(), x.vy(), x.omega()).dtheta;
+      this->H(M::OMEGA_M, S::VX) = mid.calculate(x.theta(), x.vx(), x.vy(), x.omega()).dvx;
+      this->H(M::OMEGA_M, S::VY) = mid.calculate(x.theta(), x.vx(), x.vy(), x.omega()).dvy;
+      this->H(M::OMEGA_M, S::OMEGA) = mid.calculate(x.theta(), x.vx(), x.vy(), x.omega()).domega;
       this->H(M::OMEGA_M, S::AX) = 0;
       this->H(M::OMEGA_M, S::AY) = 0;
 
@@ -115,8 +109,6 @@ namespace Robot {
       std::cout << "Wheel H is" << std::endl;
       std::cout << this->H << std::endl;
       std::cout << std::endl << std::endl;
-
-
     }
 
   };

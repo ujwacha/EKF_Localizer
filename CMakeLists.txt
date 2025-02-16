@@ -14,7 +14,6 @@ find_package(Eigen3 REQUIRED)
 # Define source files
 set(SOURCE_FILES
   src/main.cpp
-  LowPassFilter/LowPassFilter.cpp
 )
 
 # Define include directories
@@ -34,7 +33,7 @@ target_link_libraries(${PROJECT_NAME})
 
 # Optional: Add compile definitions or options
 # target_compile_definitions(${PROJECT_NAME} PRIVATE EXAMPLE_DEFINE)
-target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wconversion)
+target_compile_options(${PROJECT_NAME} PRIVATE -O3 -Wall -Wextra -Wconversion)
 
 # # Install target (optional)
 # install(TARGETS ${PROJECT_NAME}

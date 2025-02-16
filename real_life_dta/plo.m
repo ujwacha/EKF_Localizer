@@ -19,7 +19,7 @@ Fc = 3;            % Cutoff frequency (Hz)
 Fs2 = Fs/2;
 
 aFs = 100;
-aFc = 3;
+aFc = 1;
 aFs2 = aFs/2;
 % Design filter
 %d = designfilt('lowpassiir', ...
@@ -54,13 +54,13 @@ time = data(:,1);
 
 %plot(time, omega_l, "red");
 %hold on
-%plot(time, data(:,5), "green");
+plot(time, data(:,7), "green");
 
-%plot(time, omega_l, "red")
-%hold on
-%plot(time, omega_r, "blue")
-%hold on
-%plot(time, omega_m, "yellow");
+plot(time, omega_l, "red")
+hold on
+plot(time, omega_r, "blue")
+hold on
+plot(time, omega_m, "yellow");
 
 
 back_vel = omega_m * Wheel_Diameter / 2.0;
@@ -75,11 +75,11 @@ vy = back_vel + omega * BACK_RADIUS;
 %plot(time, vx,"red");
 
 
-plot(time, ax, "green");
-hold on
-plot(time, fax, "red");
-hold on
-plot(time, vx);
+%plot(time, vy, "green");
+%hold on
+%plot(time, vx, "red");
+%hold on
+%plot(time, omega);
 %hold on
 %plot(time, omega, "yellow");
 
