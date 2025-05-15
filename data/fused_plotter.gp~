@@ -1,0 +1,32 @@
+# Set labels and grid
+set xlabel "X-axis"
+set ylabel "Y-axis"
+set grid
+
+# Set axis ranges to create fixed rectangle (from the second script)
+# Keep these if you want the axes to remain fixed during animation.
+# Remove or comment them out if you prefer Gnuplot to autoscale based on the data.
+set xrange [0:7.5]
+set yrange [0:4]
+
+# Specify the delimiter as a comma (CSV file)
+set datafile separator ","
+
+# Use stats to count the number of data records (more robust method)
+stats "data.csv" using 1 nooutput
+# The number of records is stored in the variable STATS_records
+n = STATS_records
+
+# Animate data point by point
+do for [i=1:n] {
+    # Plot all desired datasets for the current frame 'i' on a single line, separated by commas
+    plot "data.csv" using 1:15 every ::1::i with lines title "Cov X", \
+         "" using 5:6 every ::1::i with lines title "Locus", \
+         "" using 5:6 every ::i::i with points pointtype 7 pointsize 1 title sprintf("Frame %d", i)
+
+    # Adjust delay (in seconds) between frames
+    pause 0.001
+}
+
+# Pause until a key is pressed after the animation finishes
+pause -1 "Press any key to close the window..."

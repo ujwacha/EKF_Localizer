@@ -48,32 +48,32 @@ public:
 
     // Determine which edge we're facing
     if (-beta <= theta_s && theta_s <= alpha) { // Right edge
-      result.distance = (b - x) / std::cos(theta_s) - r;
-      result.dx = -1.0 / std::cos(theta_s);
+      result.distance = (b - x) / (std::cos(theta_s) + eps) - r;
+      result.dx = -1.0 / (std::cos(theta_s) + eps);
       result.dy = 0.0;
       result.dtheta = (b - x) * std::sin(theta_s) /
                       (std::cos(theta_s) * std::cos(theta_s) + eps);
     } else if (alpha <= theta_s && theta_s <= M_PI - gamma) { // Top edge
-      result.distance = (l - y) / std::sin(theta_s) - r;
+      result.distance = (l - y) / (std::sin(theta_s) + eps) - r;
       result.dx = 0.0;
-      result.dy = -1.0 / std::sin(theta_s);
+      result.dy = -1.0 / (std::sin(theta_s) + eps);
       result.dtheta = -(l - y) * std::cos(theta_s) /
                       (std::sin(theta_s) * std::sin(theta_s) + eps);
     } else if (-M_PI + theta <= theta_s && theta_s <= -beta) { // Bottom edge
-      result.distance = -y / std::sin(theta_s) - r;
+      result.distance = -y / (std::sin(theta_s) + eps) - r;
       result.dx = 0.0;
-      result.dy = -1.0 / std::sin(theta_s);
+      result.dy = -1.0 / (std::sin(theta_s) + eps);
       result.dtheta =
           y * std::cos(theta_s) / (std::sin(theta_s) * std::sin(theta_s) + eps);
     } else { // Left edge
-      result.distance = -x / std::cos(theta_s) - r;
-      result.dx = -1.0 / std::cos(theta_s);
+      result.distance = -x / (std::cos(theta_s) + eps) - r;
+      result.dx = -1.0 / (std::cos(theta_s) + eps);
       result.dy = 0.0;
       result.dtheta = -x * std::sin(theta_s) /
                       (std::cos(theta_s) * std::cos(theta_s) + eps);
     }
 
-    print_res(result);
+    // print_res(result);
 
     // Clamp negative distances and handle numerical instability
     if (result.distance < 0) {
@@ -86,7 +86,7 @@ public:
 
   void print_res(SensorResult s) {
     
-    // std::cout << "RESULT{dis: " << s.distance << ", dx: " << s.dx << ", dy: " << s.dy << ", dth: " << s.dtheta << " } : " <<  std::endl;
+    std::cout << "RESULT{dis: " << s.distance << ", dx: " << s.dx << ", dy: " << s.dy << ", dth: " << s.dtheta << " } : " <<  std::endl;
     
   }
 };
