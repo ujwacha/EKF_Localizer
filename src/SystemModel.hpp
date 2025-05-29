@@ -33,6 +33,9 @@ namespace Robot {
   public:
     KALMAN_VECTOR(State, T, 8)
 
+    // some comment on the whole state
+    // x y and theta are on global frame
+    // the rest are on robot frame
 
     //! X-position
     static constexpr size_t X = 0;
@@ -112,98 +115,110 @@ namespace Robot {
     S f(const S& x, const C& u, const double t = 0.05) const {
       S x_;
 
-      x_.x()  = x.x() + x.vx()*t + 0.5*(t*t)*x.ax();
-      x_.y()  = x.y() + x.vy()*t + x.ay()*(t*t)*0.5;
+      x_.x() = x.x()
+	+ rotation_upper_x(x.theta(), x.vx(), x.vy())*t
+	+ rotation_upper_x(x.theta(), x.ax(), x.ay())*t*t*0.5;
 
-      x_.theta()  = angleClamp(x.theta() + x.omega()*t); // Clamping the angle, hope it won't affect the jacobian
+      x_.y() = x.y()
+	+ rotation_lower_y(x.theta(), x.vx(), x.vy())*t
+	+ rotation_lower_y(x.theta(), x.ax(), x.ay())*t*t*0.5;
 
-      // x_.vx() = (cos(x.theta()) * u.rvx() - sin(x.theta()) * u.rvy()) + x.ax()*t;
-      // x_.vy() = (sin(x.theta()) * u.rvx() + cos(x.theta()) * u.rvy()) + x.ay()*t;
-      //      x_.omega()  = u.romega();
+      x_.theta() = angleClamp(x.theta() + t*x.omega());
 
-      x_.vx() = x.vx() + x.ax()*t;
-      x_.vy() = x.vy() + x.ay()*t;
-      x_.omega()  = x.omega();
+      x_.vx() = u.rvx();
+
+      x_.vy() = u.rvy();
+
+      x_.omega() = u.romega();
 
       x_.ax() = x.ax();
+
       x_.ay() = x.ay();
 
       return x_;
     }
 
+    inline T rotation_upper_x(T theta, T front, T back) const {
+      theta = angleClamp(theta);
+      return std::cos(theta)*front - std::sin(theta)*back;
+    }
+
+    inline T rotation_lower_y(T theta, T front, T back) const {
+      theta = angleClamp(theta);
+      return std::sin(theta)*front + std::cos(theta)*back;
+    }
+
+    inline T rotation_upper_dx(T theta, T front, T back) const {
+      theta = angleClamp(theta);
+      return -std::sin(theta)*front - std::cos(theta)*back;
+    }
+
+    inline T rotation_lower_dy(T theta, T front, T back) const {
+      theta = angleClamp(theta);
+      return std::cos(theta)*front - std::sin(theta)*back;
+    }
+
+
 protected:
     // Update the Jecobian
     void updateJacobians(const S &x, const C &u, const double t = 0.05) {
-      
-
       // F = df/dx (Jacobian of state transition w.r.t. the state)
-      
       this->F.setZero();
 
-      // std::cout << "SYSTEM JACOBIAN UPDATED" << std::endl;
 
-
-      // First Set the ones that are 1
+      T theta = angleClamp(x.theta());
+      // for x
       this->F(S::X, S::X) = 1;
+      // for y
       this->F(S::Y, S::Y) = 1;
+
+      // for theta
+      this->F(S::X, S::THETA) =
+	t * rotation_upper_dx(theta, x.vx(), x.vy())
+	+ 0.5*t*t * rotation_upper_dx(theta, x.ax(), x.ay());
+
+      this->F(S::Y, S::THETA) = 
+	t * rotation_lower_dy(theta, x.vx(), x.vy())
+	+ 0.5*t*t * rotation_lower_dy(theta, x.ax(), x.ay());
+
       this->F(S::THETA, S::THETA) = 1;
-      this->F(S::AX, S::AX) = 1;
-      this->F(S::AY, S::AY) = 1;
-      this->F(S::OMEGA, S::OMEGA) = 1;
-      this->F(S::VX, S::VX) = 1;
-      this->F(S::VY, S::VY) = 1;
-     
-      // double this1 = (-sin(x.theta())*u.rvx() - cos(x.theta())*u.rvy());
-      // double this2 = (cos(x.theta())*u.rvx() - sin(x.theta())*u.rvy());
 
+      // for vx
+      this->F(S::X, S::VX) = t*std::cos(theta);
+      this->F(S::Y, S::VX) = t*std::sin(theta);
 
-      // // This part changed in the new one 
-      // this->F(S::X, S::THETA) = 0;
-      // this->F(S::Y, S::THETA) = 0;
+      // for vy
+      this->F(S::X, S::VY) = -t*std::sin(theta);
+      this->F(S::Y, S::VY) = t*std::cos(theta);
 
-
-
-      // // use things
-      // this->F(S::VX, S::THETA) = 0;
-      // this->F(S::VY, S::THETA) = 0;
-
-
-
-      // use time period
-      this->F(S::X, S::VX)        = t;
-      this->F(S::Y, S::VY)        = t;
+      // for omega
       this->F(S::THETA, S::OMEGA) = t;
 
-      // this->F(S::OMEGA, S::THETA) = t;
+      // for ax
+      this->F(S::X, S::AX) = 0.5*t*t*std::cos(theta);
+      this->F(S::Y, S::AX) = 0.5*t*t*std::sin(theta);
+      this->F(S::AX, S::AX) = 1;
 
-      this->F(S::VX, S::AX)       = t;
-      this->F(S::VY, S::AY)       = t;
+      // for ay
+      this->F(S::X, S::AY) = -0.5*t*t*std::sin(theta);
+      this->F(S::Y, S::AY) = 0.5*t*t*std::cos(theta);
+      this->F(S::AY, S::AY) = 1;
 
-      // use 0.5T^2
 
-      this->F(S::X, S::AX) = 0.5*t*t;
-      this->F(S::Y, S::AY) = 0.5*t*t;
-
-      // std::cout << "JACCC" << std::endl;
-
-      // std::cout << this->F << std::endl;
-
-      // std::cout << "JACCC END" << std::endl;
-
-      // W = df/dw (Jacobian of state transition w.r.t. the noise)
-      // this->W.setIdentity();
-
+      
       this->W.setIdentity();
 
+      // literally the same thing lol
+      // this->W.setZero();
+      // this->W(S::VX, C::RVX) = 1;
+      // this->W(S::VY, C::RVY) = 1;
+      // this->W(S::OMEGA, C::ROMEGA) = 1;
 
-      // this->W(S::VX, C::RVX) = std::cos(x.theta());
-      // this->W(S::VX, C::RVY) = -std::sin(x.theta());
-
-      // this->W(S::VY, C::RVX) = std::sin(x.theta());
-      // this->W(S::VY, C::RVX) = std::cos(x.theta());
-
+      // std::cout << "W = " << std::endl;
+      // std::cout << this->W << std::endl;
+      // char c;
+      // std::cin >> c;
       // W Matrix Has been set
-
 
     }
   };

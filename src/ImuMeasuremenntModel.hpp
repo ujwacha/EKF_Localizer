@@ -50,8 +50,8 @@ namespace Robot {
 
     M h(const S& x) const {
       M measurement;
-      measurement.ax() = std::cos(x.theta())*x.ax() + std::sin(x.theta())*x.ay();
-      measurement.ay() = -std::sin(x.theta())*x.ax() + std::cos(x.theta())*x.ay();
+      measurement.ax() = x.ax();
+      measurement.ay() = x.ay();
       measurement.yaw() = x.theta();
 
       return measurement;
@@ -60,17 +60,13 @@ namespace Robot {
     void updateJacobians(const S& x, const double t = 0.05) {
       this->H.setZero();
 
-      this->H(M::AX, S::THETA) = -std::sin(x.theta())*x.ax() + std::cos(x.theta())*x.ay();
-      this->H(M::AY, S::THETA) = -std::cos(x.theta())*x.ax() - std::sin(x.theta())*x.ay();
       this->H(M::YAW, S::THETA) = 1;
 
       // Row
-      this->H(M::AX, S::AX) = std::cos(x.theta());
-      this->H(M::AX, S::AY) = std::sin(x.theta());
+      this->H(M::AX, S::AX) = 1;
 
       //Row
-      this->H(M::AY, S::AX) = -std::sin(x.theta());
-      this->H(M::AY, S::AY) = std::cos(x.theta());
+      this->H(M::AY, S::AY) =  1;
 
 
       // std::cout << "IMU Jacobian Updated" << std::endl;

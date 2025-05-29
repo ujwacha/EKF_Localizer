@@ -18,8 +18,8 @@ hold on;
 title('Robot Position (x-y)');
 xlabel('X-axis');
 ylabel('Y-axis');
-xlim([0 7.5]);  % Fixed x-range
-ylim([0 4]);    % Fixed y-range
+xlim([0 15]);  % Fixed x-range
+ylim([0 8]);    % Fixed y-range
 grid on;
 pos_line = plot(NaN, NaN, 'b-', 'DisplayName', 'Locus');  % Initialize empty line
 pos_point = plot(NaN, NaN, 'ro', 'MarkerFaceColor', 'r', 'DisplayName', 'Current');  % Current point
@@ -27,9 +27,9 @@ pos_point = plot(NaN, NaN, 'ro', 'MarkerFaceColor', 'r', 'DisplayName', 'Current
 % Right subplot: covariance of x
 sp2 = subplot(1, 2, 2);
 hold on;
-title('Covariance of x');
+title('+ or - Error of x');
 xlabel('Frame');
-ylabel('Cov(x)');
+ylabel('Err(x)');
 grid on;
 cov_line = plot(NaN, NaN, 'g-', 'DisplayName', 'Cov x');
 
