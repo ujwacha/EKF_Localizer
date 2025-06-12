@@ -57,17 +57,19 @@ namespace Robot {
     M h(const S& x) const {
       M measurement;
 
-      // std::cout << "KF THINKS: " << std::endl;
+      #ifdef PRINT_DEBUG
+      std::cout << "KF THINKS: " << std::endl;
 
-      // std::cout << "x: " << x.x() << std::endl
-      // 		<< "y: " << x.y() << std::endl
-      // 		<< "th: " << x.theta() << std::endl << std::endl;
+      std::cout << "x: " << x.x() << std::endl
+		<< "y: " << x.y() << std::endl
+		<< "th: " << x.theta() << std::endl << std::endl;
       
-      // std::cout 
-      // 	<< "d1:" << d1.calculate(x.x(), x.y(), x.theta()).distance << std::endl
-      // 	<< "d2:" << d2.calculate(x.x(), x.y(), x.theta()).distance << std::endl
-      // 	<< "d2:" << d3.calculate(x.x(), x.y(), x.theta()).distance << std::endl
-      // 	<< std::endl;
+      std::cout 
+	<< "d1:" << d1.calculate(x.x(), x.y(), x.theta()).distance << std::endl
+	<< "d2:" << d2.calculate(x.x(), x.y(), x.theta()).distance << std::endl
+	<< "d2:" << d3.calculate(x.x(), x.y(), x.theta()).distance << std::endl
+	<< std::endl;
+      #endif
 
       measurement.d1() = d1.calculate(x.x(), x.y(), x.theta()).distance;
       measurement.d2() = d2.calculate(x.x(), x.y(), x.theta()).distance;

@@ -98,8 +98,9 @@ int main() {
   State state;
   state.setZero();
 
-  state.x() = 1;
-  state.y() = 1;
+  state.x() = 11.7;
+  state.y() = 4.2;
+  state.yaw_bias() = 0.0;
 
   Twist twist;
 
@@ -132,16 +133,16 @@ int main() {
   Kalman::Covariance<TFMiniMeasurement> y_minus_cov;
 
   x_plus_cov.setIdentity();
-  x_plus_cov /= 50;
+  x_plus_cov /= 20;
 
   y_plus_cov.setIdentity();
-  y_plus_cov /= 50;
+  y_plus_cov /= 20;
 
   x_minus_cov.setIdentity();
-  x_minus_cov /= 50;
+  x_minus_cov /= 20;
  
   y_minus_cov.setIdentity();
-  y_minus_cov /= 50;
+  y_minus_cov /= 20;
 
 
   mini_x_plus.setCovariance(x_plus_cov);
@@ -155,14 +156,15 @@ int main() {
   state_cov.setIdentity();
   state_cov /= 10;
 
-  state_cov(State::X, State::X) = 1;
-  state_cov(State::Y, State::Y) = 1;
+  state_cov(State::X, State::X) = 0.01;
+  state_cov(State::Y, State::Y) = 0.01;
   state_cov(State::VX, State::VX) = 0.3;
   state_cov(State::VY, State::VY) = 0.3;
   state_cov(State::OMEGA, State::OMEGA) = 0.3;
-  state_cov(State::THETA, State::THETA) = 2;
+  state_cov(State::THETA, State::THETA) = 1;
   state_cov(State::AX, State::AX) = 1;
   state_cov(State::AY, State::AY) = 1;
+  state_cov(State::YAW_BIAS, State::YAW_BIAS) = 1e-4;
 
   wheel_cov(WheelMeasurement::OMEGA_L, WheelMeasurement::OMEGA_L) = 1;
   wheel_cov(WheelMeasurement::OMEGA_R, WheelMeasurement::OMEGA_R) = 1;
@@ -170,7 +172,7 @@ int main() {
 
   imu_cov(ImuMeasurement::AX, ImuMeasurement::AX) = 1;
   imu_cov(ImuMeasurement::AY, ImuMeasurement::AY) = 1;
-  imu_cov(ImuMeasurement::YAW, ImuMeasurement::YAW) = 0.001;
+  imu_cov(ImuMeasurement::YAW, ImuMeasurement::YAW) = 0.00001;
 
 
   // odom_cov(OdomMeasurement::X, OdomMeasurement::X) = 100;
@@ -284,6 +286,7 @@ int main() {
   };
 
   double time = 0.01;
+  int count = 0;
 
   for (int i = 00; i < rx.size(); i++) {
 
@@ -294,103 +297,163 @@ int main() {
     //    auto x_ekf = ekf.predict(sys, twist, time);
     auto x_pred = predictor.predict(sys, twist, time);
 
-    double omega_r = omega_r_lpf.update(o_r[i]);
-    double omega_l = omega_l_lpf.update(o_l[i]);
-    double omega_m = omega_m_lpf.update(o_m[i]);
+    // double omega_r = omega_r_lpf.update(o_r[i]);
+    // double omega_l = omega_l_lpf.update(o_l[i]);
+    // double omega_m = omega_m_lpf.update(o_m[i]);
 
-    auto calculated = controller_model.get_output(omega_l, omega_r, omega_m);
-    double omega = calculated.w;
-    double vx = calculated.vx;
-    double vy = calculated.vy;
+
+    // // double omega_r = o_r[i];
+    // // double omega_l = o_l[i];
+    // // double omega_m = o_m[i];
+
+ 
+    // auto calculated = controller_model.get_output(omega_l, omega_r, omega_m);
+    // /
+    //   /                                               x       y        z
+    // //                                               z       x        y
+
+    double vx = o_l[i];
+    double vy = o_r[i];
+    double omega = o_m[i];
 
     OdomMeasurement mea;
 
     twist.rvx() = vx;
     twist.rvy() = vy;
     twist.romega() = omega;
+
+    std::cout << "TWIST: " << std::endl;
+    std::cout << twist << std::endl;
+    char cccc;
+    if (i % 100 == 0) {
+      //      std::cin >> cccc;
+    }
     auto x_ekf = ekf.predict(sys, twist, time);
 
-    // Imu Measurement
-    // We can measure the orientation every 5th step
-    ImuMeasurement imu;
-    // Measurement is affected by noise as well
+    if (s_up[i] == 0) {
+      // Imu Measurement
+      // We can measure the orientation every 5th step
+      ImuMeasurement imu;
+      // Measurement is affected by noise as well
 
-    double roll = ir[i];
-    double pitch = ip[i];
-    double yaw = iy[i];
-    double ax = iax[i];
-    double ay = iay[i];
-    double az = iaz[i];
+      double roll = ir[i];
+      double pitch = ip[i];
+      double yaw = iy[i];
+      double ax = iax[i];
+      double ay = iay[i];
+      double az = iaz[i];
 
-    Eigen::Vector3d accel = {ax, ay, az};
+      Eigen::Vector3d accel = {ax, ay, az};
 
-    Eigen::Vector3d rot_accel = rotateVector(accel, roll, pitch);
+      Eigen::Vector3d rot_accel = rotateVector(accel, roll, pitch);
 
-    // imu.yaw() = iy[i];
-    // imu.ax() = accel_x_lpf.update(iax[i]);
-    // imu.ay() = accel_y_lpf.update(iay[i]);
+      // imu.yaw() = iy[i];
+      // imu.ax() = accel_x_lpf.update(iax[i]);
+      // imu.ay() = accel_y_lpf.update(iay[i]);
 
-    imu.yaw() = yaw;
-    imu.ax() = accel_x_lpf.update(rot_accel(0));
-    imu.ay() = accel_y_lpf.update(rot_accel(1));
+      imu.yaw() = yaw;
+      imu.ax() = accel_x_lpf.update(rot_accel(0));
+      imu.ay() = accel_y_lpf.update(rot_accel(1));
 
-    // std::cout << "The accels are  " << rot_accel(0) << " " << rot_accel(1)
-    // << " "  << rot_accel(2) << std::endl;
-    std::cout << "roll: " << roll << std::endl;
-    std::cout << "pitch : " << pitch << std::endl;
-    std::cout << "az : " << az << std::endl;
-    std::cout << "accel: " << accel << std::endl;
-    std::cout << "rot_accel: " << rot_accel << std::endl;
-    std::cout << "imu: " << imu << std::endl;
+      // std::cout << "The accels are  " << rot_accel(0) << " " << rot_accel(1)
+      // << " "  << rot_accel(2) << std::endl;
+      std::cout << "roll: " << roll << std::endl;
+      std::cout << "pitch : " << pitch << std::endl;
+      std::cout << "az : " << az << std::endl;
+      std::cout << "accel: " << accel << std::endl;
+      std::cout << "rot_accel: " << rot_accel << std::endl;
+      std::cout << "imu: " << imu << std::endl;
 
-    // Update EK// F
+      // Update EK// F
 
-    x_ekf = ekf.update(imu_model, imu, time);
+      x_ekf = ekf.update(imu_model, imu, time, true, 1);
 
-    if (s_up[i]) {
+    } else {
+      count += 1;
+      TFMiniMeasurement mea_x_plus;
+      TFMiniMeasurement mea_x_minus;
+      TFMiniMeasurement mea_y_plus;
+      TFMiniMeasurement mea_y_minus;
 
-      {
-        TFMiniMeasurement mea_x_plus;
-        TFMiniMeasurement mea_x_minus;
-        TFMiniMeasurement mea_y_plus;
-        TFMiniMeasurement mea_y_minus;
+      mea_x_plus.d1() = sd4[i] / 100;
+      mea_x_plus.d2() = sd1[i] / 100;
+      mea_x_plus.d3() = sd2[i] / 100;
 
+      mea_y_plus.d1() = sd1[i] / 100;
+      mea_y_plus.d2() = sd2[i] / 100;
+      mea_y_plus.d3() = sd3[i] / 100;
 
-	mea_x_plus.d1() = sd4[i]/100;
-	mea_x_plus.d2() = sd1[i]/100;
-	mea_x_plus.d3() = sd2[i]/100;
+      mea_x_minus.d1() = sd2[i] / 100;
+      mea_x_minus.d2() = sd3[i] / 100;
+      mea_x_minus.d3() = sd4[i] / 100;
 
-	mea_y_plus.d1() = sd1[i]/100;
-	mea_y_plus.d2() = sd2[i]/100;
-	mea_y_plus.d3() = sd3[i]/100;
+      mea_y_minus.d1() = sd3[i] / 100;
+      mea_y_minus.d2() = sd4[i] / 100;
+      mea_y_minus.d3() = sd1[i] / 100;
 
-	mea_x_minus.d1() = sd2[i]/100;
-	mea_x_minus.d2() = sd3[i]/100;
-	mea_x_minus.d3() = sd4[i]/100;
+      // if (sw4[i] && sw1[i] && sw2[i]) x_ekf = ekf.update(mini_x_plus,
+      // mea_x_plus, true, 100);
 
-        mea_y_minus.d1() = sd3[i]/100;
-	mea_y_minus.d2() = sd4[i]/100;
-	mea_y_minus.d3() = sd1[i]/100;
+      // if (sw1[i] && sw2[i] && sw3[i]) x_ekf = ekf.update(mini_y_plus,
+      // mea_y_plus, true, 100);
 
-	
-	if (sw4[i] && sw1[i] && sw2[i]) x_ekf = ekf.update(mini_x_plus, mea_x_plus, true, 1);
+      // if (sw2[i] && sw3[i] && sw4[i]) x_ekf = ekf.update(mini_x_minus,
+      // mea_x_minus, true, 100);
 
-	if (sw1[i] && sw2[i] && sw3[i]) x_ekf = ekf.update(mini_y_plus, mea_y_plus, true, 1);
+      // if (sw3[i] && sw4[i] && sw1[i]) x_ekf = ekf.update(mini_y_minus,
+      // mea_y_minus, true, 100);
+      const double radius = 0.5;
+      const bool use_mahalanobis = true;
 
-	if (sw2[i] && sw3[i] && sw4[i]) x_ekf = ekf.update(mini_x_minus, mea_x_minus, true, 1);
+      if (false) goto NO_DIST;
 
-	if (sw3[i] && sw4[i] && sw1[i]) x_ekf = ekf.update(mini_y_minus, mea_y_minus, true, 1);
-
-	// if (sw4[i] && sw1[i] && sw2[i]) x_ekf = ekf.update(mini_x_plus, mea_x_plus);
-
-	// if (sw1[i] && sw2[i] && sw3[i]) x_ekf = ekf.update(mini_y_plus, mea_y_plus);
-
-	// if (sw2[i] && sw3[i] && sw4[i]) x_ekf = ekf.update(mini_x_minus, mea_x_minus);
-
-	// if (sw3[i] && sw4[i] && sw1[i]) x_ekf = ekf.update(mini_y_minus, mea_y_minus);
-
-
+      // if (count < 30) x_ekf.yaw_bias() = 0;
+      
+      
+      if (sw4[i] && sw1[i] && sw2[i]) {
+	x_ekf = ekf.update(mini_x_plus, mea_x_plus, time, use_mahalanobis, radius);
+	std::cout << "TO UPDATE X PLUS" << std::endl;
+	std::cout << mea_x_plus << std::endl;
+	if (count % 25 == 0) {
+	  char chh;
+	  //std::cin >> chh;
+	}
       }
+
+      if (sw1[i] && sw2[i] && sw3[i]) {
+	x_ekf = ekf.update(mini_y_plus, mea_y_plus, time, use_mahalanobis, radius);
+	std::cout << "TO UPDATE Y PLUS" << std::endl;
+	std::cout << mea_y_plus << std::endl;
+	if (count % 25 == 0) {
+	  char chh;
+	  //std::cin >> chh;
+	}
+      }
+
+      if (sw2[i] && sw3[i] && sw4[i]) {
+	x_ekf = ekf.update(mini_x_minus, mea_x_minus, time, use_mahalanobis, radius);
+	std::cout << "TO UPDATE X MINUS" << std::endl;
+	std::cout << mea_x_minus << std::endl;
+
+	if (count % 25 == 0) {
+	  char chh;
+	  //	  std::cin >> chh;
+	}
+      }
+
+      if (sw3[i] && sw4[i] && sw1[i]) {
+	x_ekf = ekf.update(mini_y_minus, mea_y_minus, time, use_mahalanobis, radius);
+	std::cout << "TO UPDATE Y MINUS" << std::endl;
+	std::cout << mea_y_minus<< std::endl;
+	if (count % 25 == 0) {
+	  char chh;
+	  //std::cin >> chh;
+	}
+	
+      }
+
+    NO_DIST: int a = 5;
+
     }
 
     fs << i << "," << x_ekf.vx() << "," << x_ekf.vy() << "," << state.theta()
@@ -398,7 +461,9 @@ int main() {
        << x_pred.x() << "," << x_pred.y() << "," << x_pred.theta() << ","
        << ox[i] << "," << oy[i] << "," << oth[i] << "," << iy[i] << ","
        << 2 * sqrt(ekf.getCovariance()(State::X, State::X)) << ","
-       << 2 * sqrt(ekf.getCovariance()(State::X, State::X)) << std::endl;
+       << 2 * sqrt(ekf.getCovariance()(State::Y, State::Y)) << ","
+       << x_ekf.yaw_bias()
+       << std::endl;
 
     twist.romega() = rw[i];
     twist.rvx() = rx[i];

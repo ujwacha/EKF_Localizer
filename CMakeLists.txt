@@ -32,8 +32,8 @@ add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 target_link_libraries(${PROJECT_NAME})
 
 # Optional: Add compile definitions or options
-target_compile_definitions(${PROJECT_NAME} PRIVATE ROBUSTIFY )
-target_compile_options(${PROJECT_NAME} PRIVATE -O3 -Wall -Wextra -Wconversion)
+target_compile_definitions(${PROJECT_NAME} PRIVATE PRINT_DEBUG)
+target_compile_options(${PROJECT_NAME} PRIVATE -g -O3 -Wall -Wextra -Wconversion)
 
 # # Install target (optional)
 # install(TARGETS ${PROJECT_NAME}
