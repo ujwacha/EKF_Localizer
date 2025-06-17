@@ -211,9 +211,21 @@ protected:
 
 
       this->F(S::YAW_BIAS, S::YAW_BIAS) = 1;
-      
+
+
       this->W.setIdentity();
 
+      if (fabs(sqrt(x.vx()*x.vx() + x.vy()*x.vy() + x.omega()*x.omega())) < 0.1) {
+	this->W(S::X , S::X) /= 5;
+	this->W(S::Y , S::Y) /= 5;
+      }
+
+
+      // if (fabs(sqrt(x.vx()*x.vx() + x.vy()*x.vy()) < 0.1)) {
+      // 	this->W(S::X , S::X) /= 10;
+      // 	this->W(S::Y , S::Y) /= 10;
+      // }
+      
       // literally the same thing lol
       // this->W.setZero();
       // this->W(S::VX, C::RVX) = 1;

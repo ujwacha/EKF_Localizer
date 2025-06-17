@@ -4,14 +4,15 @@
 #include <ostream>
 
 #include "kalman/LinearizedMeasurementModel.hpp"
-#include "Distance_Bet.hpp"
+//// /#include "Distance_Bet.hpp"
+
 
 #define PI 3.1415
 
 namespace Robot {
-  template <typename T> class TwoSensorsMeasurement: public Kalman::Vector<T, 1> {
+  template <typename T> class DistanceSensorMeasurement: public Kalman::Vector<T, 1> {
   public:
-    KALMAN_VECTOR(TwoSensorsMeasurement, T, 1)
+    KALMAN_VECTOR(DistanceSensorMeasurement, T, 1)
 
     static constexpr std::size_t D1 = 0;
 
@@ -22,19 +23,19 @@ namespace Robot {
 
   template <typename T,
 	    template <class> class CovarianceBase = Kalman::StandardBase>
-  class TwoSensorsMeasurementModel
-    : public Kalman::LinearizedMeasurementModel<State<T>, TwoSensorsMeasurement<T>, CovarianceBase> {
+  class DistanceSensorMeasurementModel
+    : public Kalman::LinearizedMeasurementModel<State<T>, DistanceSensorMeasurement<T>, CovarianceBase> {
   public:
     //! State type shortcut definition
     typedef State<T> S;
     
     //! Measurement type shortcut definition
-    typedef TwoSensorsMeasurement<T> M;
+    typedef DistanceSensorMeasurement<T> M;
 
     mutable RobotSensorKalman<T> d1;
 
  
-    TwoSensorsMeasurementModel(T angle1_, T r1_, T l_, T b_):
+    DistanceSensorMeasurementModel(T angle1_, T r1_, T l_, T b_):
       d1(angle1_, r1_, l_, b_)
     {
       this->H.setIdentity();
@@ -72,6 +73,27 @@ namespace Robot {
       this->H(M::D1, S::X) = d1.calculate(x.x(), x.y(), x.theta()).dx;
       this->H(M::D1, S::Y) = d1.calculate(x.x(), x.y(), x.theta()).dy;
       this->H(M::D1, S::THETA) = d1.calculate(x.x(), x.y(), x.theta()).dtheta;
+
+      std::cout << "H: " << this->H(M::D1, S::THETA) << std::endl;
+
+      // if (fabs(x.vx()) < 0.15 && fabs(x.vy()) < 0.15 && fabs(x.omega()) > 0.8)
+      //   this->V(M::D1, M::D1) = 10;
+      // else
+      //   this->V(M::D1, M::D1) = 1;
+
+
+      // angles you want to reject is given by
+      //cos (angle) = 1/value 
+
+      double value = 2;
+      
+      if ((fabs(this->H(M::D1, S::X)) + fabs(this->H(M::D1, S::Y))) > value)
+	this->V(M::D1, M::D1) = 6000;
+      else 
+	this->V(M::D1, M::D1) = 1;
+
+      // this->V(M::D1, M::D1) = 1 + this->H(M::D1, S::THETA) * 2;
+
     }
   
   };

@@ -14,11 +14,14 @@
 #include "rapidcsv.h"
 #include "ThreeWheel.hpp"
 #include "TFMiniMeasurementModek.hpp"
-//#include "TwoDistanceSensorsMeasurementModel.hpp"
+#include "TwoDistanceSensorsMeasurementModel.hpp"
 #include <Eigen/Dense>
 
 #include "filter.h"
 #include "three_wheels_to_twist.hpp"
+
+#include "DistanceSensorModel.hpp"
+#include "FourDistanceSensorsModel.hpp"
 
 #define MID_RADIUS 0.235
 
@@ -45,14 +48,21 @@ typedef Robot::OdomMeasurement<T> OdomMeasurement;
 typedef Robot::ImuMeasurement<T> ImuMeasurement;
 typedef Robot::WheelMeasurement<T> WheelMeasurement;
 typedef Robot::TFMiniMeasurement<T> TFMiniMeasurement;
-//typedef Robot::TwoSensorsMeasurement<T> TwoSensorsMeasurement;
+typedef Robot::DistanceSensorMeasurement<T> DistanceSensorMeasurement;
+typedef Robot::TwoSensorsMeasurement<T> TwoSensorsMeasurement;
+typedef Robot::FourSensorsMeasurement<T> FourSensorsMeasurement;
 
 
 typedef Robot::OdomMeasurementModel<T> OdomMeasurementModel;
 typedef Robot::ImuMeasurementModel<T> ImuMeasurementModel;
 typedef Robot::WheelMeasurementModel<T> WheelMeasurementModel;
 typedef Robot::TFMiniMeasurementModel<T> TFMiniMeasurementModel;
-//typedef Robot::TwoSensorsMeasurementModel<T> TwoSensorsMeasurementModel;
+typedef Robot::DistanceSensorMeasurementModel<T> DistanceSensorMeasurementModel;
+typedef Robot::TwoSensorsMeasurementModel<T> TwoSensorsMeasurementModel;
+typedef Robot::FourDistanceSensorsMeasumementModel<T> FourDistanceSensorsMeasumementModel;
+
+
+#include "DynamicDistanceModel.hpp"
 
 
 template <typename T>
@@ -98,9 +108,10 @@ int main() {
   State state;
   state.setZero();
 
-  state.x() = 11.7;
-  state.y() = 4.2;
-  state.yaw_bias() = 0.0;
+  state.x() = 10;
+  state.y() = 5.2;
+  state.yaw_bias() = 0.001;
+  // state.yaw_bias() = 3;
 
   Twist twist;
 
@@ -122,6 +133,13 @@ int main() {
 
   TFMiniMeasurementModel mini_y_minus(PI, 0.275, -PI/2, 0.265, 0, 0.295, 8, 15);
 
+  DistanceSensorMeasurementModel sensor_one(0, 0.295, 8, 15);
+  DistanceSensorMeasurementModel sensor_two(PI/2, 0.273, 8, 15);
+  DistanceSensorMeasurementModel sensor_three(PI, 0.275, 8, 15);
+  DistanceSensorMeasurementModel sensor_four(-PI/2, 0.265, 8, 15);
+
+
+
   Kalman::Covariance<OdomMeasurement> odom_cov;
   Kalman::Covariance<ImuMeasurement> imu_cov;
   Kalman::Covariance<WheelMeasurement> wheel_cov;
@@ -131,6 +149,11 @@ int main() {
   Kalman::Covariance<TFMiniMeasurement> x_minus_cov;
   Kalman::Covariance<TFMiniMeasurement> y_plus_cov;
   Kalman::Covariance<TFMiniMeasurement> y_minus_cov;
+
+  Kalman::Covariance<DistanceSensorMeasurement> sensor_one_cov;
+  Kalman::Covariance<DistanceSensorMeasurement> sensor_two_cov;
+  Kalman::Covariance<DistanceSensorMeasurement> sensor_three_cov;
+  Kalman::Covariance<DistanceSensorMeasurement> sensor_four_cov;
 
   x_plus_cov.setIdentity();
   x_plus_cov /= 20;
@@ -144,27 +167,56 @@ int main() {
   y_minus_cov.setIdentity();
   y_minus_cov /= 20;
 
+  float to_divide = 400;
+  
+  sensor_one_cov.setIdentity();
+  sensor_one_cov /= to_divide;
+
+  sensor_two_cov.setIdentity();
+  sensor_two_cov /= to_divide;
+
+  sensor_three_cov.setIdentity();
+  sensor_three_cov /= to_divide;
+
+  sensor_four_cov.setIdentity();
+  sensor_four_cov /= to_divide;
 
   mini_x_plus.setCovariance(x_plus_cov);
   mini_y_plus.setCovariance(y_plus_cov);
   mini_x_minus.setCovariance(x_minus_cov);
   mini_y_minus.setCovariance(y_minus_cov);
+
+
+  sensor_one.setCovariance(sensor_one_cov);
+  sensor_two.setCovariance(sensor_two_cov);
+  sensor_three.setCovariance(sensor_three_cov);
+  sensor_four.setCovariance(sensor_four_cov);
+
  
-  // Kalman::Covariance<TwoSensorsMeasurement> cov_right;
-  // Kalman::Covariance<TwoSensorsMeasurement> cov_left;
+  Kalman::Covariance<TwoSensorsMeasurement> cov_right;
+  Kalman::Covariance<TwoSensorsMeasurement> cov_left;
 
   state_cov.setIdentity();
   state_cov /= 10;
 
-  state_cov(State::X, State::X) = 0.01;
-  state_cov(State::Y, State::Y) = 0.01;
+  // state_cov(State::X, State::X) = 0.0005;
+  // state_cov(State::Y, State::Y) = 0.0005;
+
+  state_cov(State::X, State::X) = 0.0005;
+  state_cov(State::Y, State::Y) = 0.0005;
+
+
+  // state_cov(State::X, State::X) = 1;
+  // state_cov(State::Y, State::Y) = 1;
+
+
   state_cov(State::VX, State::VX) = 0.3;
   state_cov(State::VY, State::VY) = 0.3;
   state_cov(State::OMEGA, State::OMEGA) = 0.3;
-  state_cov(State::THETA, State::THETA) = 1;
+  state_cov(State::THETA, State::THETA) = 0.007;
   state_cov(State::AX, State::AX) = 1;
   state_cov(State::AY, State::AY) = 1;
-  state_cov(State::YAW_BIAS, State::YAW_BIAS) = 1e-4;
+  state_cov(State::YAW_BIAS, State::YAW_BIAS) = 1e-6;
 
   wheel_cov(WheelMeasurement::OMEGA_L, WheelMeasurement::OMEGA_L) = 1;
   wheel_cov(WheelMeasurement::OMEGA_R, WheelMeasurement::OMEGA_R) = 1;
@@ -172,7 +224,7 @@ int main() {
 
   imu_cov(ImuMeasurement::AX, ImuMeasurement::AX) = 1;
   imu_cov(ImuMeasurement::AY, ImuMeasurement::AY) = 1;
-  imu_cov(ImuMeasurement::YAW, ImuMeasurement::YAW) = 0.00001;
+  imu_cov(ImuMeasurement::YAW, ImuMeasurement::YAW) = 0.0001;
 
 
   // odom_cov(OdomMeasurement::X, OdomMeasurement::X) = 100;
@@ -288,7 +340,7 @@ int main() {
   double time = 0.01;
   int count = 0;
 
-  for (int i = 00; i < rx.size(); i++) {
+  for (int i = 00; i < rx.size() ; i++) {
 
     time = t[i] - t[i - 1];
 
@@ -366,30 +418,88 @@ int main() {
 
       // Update EK// F
 
-      x_ekf = ekf.update(imu_model, imu, time, true, 1);
+      x_ekf = ekf.update(imu_model, imu, time, false, 1);
 
     } else {
+
+
+
+
+      // Imu Measurement
+      // We can measure the orientation every 5th step
+      ImuMeasurement imu;
+      // Measurement is affected by noise as well
+
+      double roll = ir[i];
+      double pitch = ip[i];
+      double yaw = iy[i];
+      double ax = iax[i];
+      double ay = iay[i];
+      double az = iaz[i];
+
+      Eigen::Vector3d accel = {ax, ay, az};
+
+      Eigen::Vector3d rot_accel = rotateVector(accel, roll, pitch);
+
+      // imu.yaw() = iy[i];
+      // imu.ax() = accel_x_lpf.update(iax[i]);
+      // imu.ay() = accel_y_lpf.update(iay[i]);
+
+      imu.yaw() = yaw;
+      imu.ax() = accel_x_lpf.update(rot_accel(0));
+      imu.ay() = accel_y_lpf.update(rot_accel(1));
+
+      // std::cout << "The accels are  " << rot_accel(0) << " " << rot_accel(1)
+      // << " "  << rot_accel(2) << std::endl;
+      std::cout << "roll: " << roll << std::endl;
+      std::cout << "pitch : " << pitch << std::endl;
+      std::cout << "az : " << az << std::endl;
+      std::cout << "accel: " << accel << std::endl;
+      std::cout << "rot_accel: " << rot_accel << std::endl;
+      std::cout << "imu: " << imu << std::endl;
+
+      // Update EK// F
+
+      x_ekf = ekf.update(imu_model, imu, time, false, 1);
+
+
+
+
+
+
+
+
       count += 1;
       TFMiniMeasurement mea_x_plus;
       TFMiniMeasurement mea_x_minus;
       TFMiniMeasurement mea_y_plus;
       TFMiniMeasurement mea_y_minus;
 
-      mea_x_plus.d1() = sd4[i] / 100;
-      mea_x_plus.d2() = sd1[i] / 100;
-      mea_x_plus.d3() = sd2[i] / 100;
+      DistanceSensorMeasurement sensor_one_measurement;
+      DistanceSensorMeasurement sensor_two_measurement;
+      DistanceSensorMeasurement sensor_three_measurement;
+      DistanceSensorMeasurement sensor_four_measurement;
 
-      mea_y_plus.d1() = sd1[i] / 100;
-      mea_y_plus.d2() = sd2[i] / 100;
-      mea_y_plus.d3() = sd3[i] / 100;
+      sensor_one_measurement.d1() = sd1[i] / 100;
+      sensor_two_measurement.d1() = sd2[i] / 100;
+      sensor_three_measurement.d1() = sd3[i] / 100;
+      sensor_four_measurement.d1() = sd4[i] / 100;
 
-      mea_x_minus.d1() = sd2[i] / 100;
-      mea_x_minus.d2() = sd3[i] / 100;
-      mea_x_minus.d3() = sd4[i] / 100;
+      // mea_x_plus.d1() = sd4[i] / 100;
+      // mea_x_plus.d2() = sd1[i] / 100;
+      // mea_x_plus.d3() = sd2[i] / 100;
 
-      mea_y_minus.d1() = sd3[i] / 100;
-      mea_y_minus.d2() = sd4[i] / 100;
-      mea_y_minus.d3() = sd1[i] / 100;
+      // mea_y_plus.d1() = sd1[i] / 100;
+      // mea_y_plus.d2() = sd2[i] / 100;
+      // mea_y_plus.d3() = sd3[i] / 100;
+
+      // mea_x_minus.d1() = sd2[i] / 100;
+      // mea_x_minus.d2() = sd3[i] / 100;
+      // mea_x_minus.d3() = sd4[i] / 100;
+
+      // mea_y_minus.d1() = sd3[i] / 100;
+      // mea_y_minus.d2() = sd4[i] / 100;
+      // mea_y_minus.d3() = sd1[i] / 100;
 
       // if (sw4[i] && sw1[i] && sw2[i]) x_ekf = ekf.update(mini_x_plus,
       // mea_x_plus, true, 100);
@@ -402,56 +512,103 @@ int main() {
 
       // if (sw3[i] && sw4[i] && sw1[i]) x_ekf = ekf.update(mini_y_minus,
       // mea_y_minus, true, 100);
-      const double radius = 0.5;
-      const bool use_mahalanobis = true;
 
-      if (false) goto NO_DIST;
+      bool use_mahalanobis = true;
+      if (count < 30) 
+	use_mahalanobis = false;
 
-      // if (count < 30) x_ekf.yaw_bias() = 0;
+
+
+      std::vector<double> distances;
+      unsigned int mask = 0;
+      const double single_radius = 1;
+      const double radius = 1.4 * single_radius;
+      const double divider = 40;
+     
+
+      if (sw1[i] && (ekf.get_mahalanobis(sensor_one, sensor_one_measurement) < single_radius * single_radius)) {
+	distances.push_back(sensor_one_measurement.d1());
+	mask = mask | SENSOR_ONE;
+      }
+
+      if (sw2[i] && (ekf.get_mahalanobis(sensor_two, sensor_two_measurement) < single_radius * single_radius)) {
+	distances.push_back(sensor_two_measurement.d1());
+	mask = mask | SENSOR_TWO;
+      }
+
+      if (sw3[i] && (ekf.get_mahalanobis(sensor_three, sensor_three_measurement) < single_radius * single_radius)) {
+	distances.push_back(sensor_three_measurement.d1());
+	mask = mask | SENSOR_THREE;
+      }
+
+      if (sw4[i] && (ekf.get_mahalanobis(sensor_four, sensor_four_measurement) < single_radius * single_radius)) {
+	distances.push_back(sensor_four_measurement.d1());
+	mask = mask | SENSOR_FOUR;
+      }
+
+      std::cout << "working_distances:" << distances.size() << std::endl;
+      // std::cin >> aaa;
       
+      if (distances.size() == 1) {
+
+	DistanceSensorMeasurementModel current = get_sensor_one(mask);
+	DistanceSensorMeasurement current_measurement;
+	current_measurement.d1() = distances[0];
+	Kalman::Covariance<DistanceSensorMeasurement> current_one_cov;
+	current_one_cov.setIdentity();
+	current_one_cov/=divider;
+	current.setCovariance(current_one_cov);
+	x_ekf = ekf.update(current, current_measurement, time, use_mahalanobis, radius);
+
+      } else if (distances.size() == 2) {
+
+	TwoSensorsMeasurementModel current = get_sensor_two(mask);
+	TwoSensorsMeasurement current_measurement;
+	current_measurement.d1() = distances[0];
+	current_measurement.d2() = distances[1];
+	Kalman::Covariance<TwoSensorsMeasurement> current_one_cov;
+	current_one_cov.setIdentity();
+	current_one_cov/=divider;
+	current.setCovariance(current_one_cov);
+	x_ekf = ekf.update(current, current_measurement, time, use_mahalanobis, radius);
+
+      } else if (distances.size() == 3) {
+
+	TFMiniMeasurementModel current = get_sensor_three(mask);
+	TFMiniMeasurement current_measurement;
+	current_measurement.d1() = distances[0];
+	current_measurement.d2() = distances[1];
+	current_measurement.d3() = distances[2];
+	Kalman::Covariance<TFMiniMeasurement> current_one_cov;
+	current_one_cov.setIdentity();
+	current_one_cov/=divider;
+	current.setCovariance(current_one_cov);
+	x_ekf = ekf.update(current, current_measurement, time, use_mahalanobis, radius);
+
+      } else if (distances.size() == 4) {
+
+	FourDistanceSensorsMeasumementModel current = get_sensor_four();
+	FourSensorsMeasurement current_measurement;
+	current_measurement.d1() = distances[0];
+	current_measurement.d2() = distances[1];
+	current_measurement.d3() = distances[2];
+	current_measurement.d4() = distances[3];
+	Kalman::Covariance<FourSensorsMeasurement> current_one_cov;
+	current_one_cov.setIdentity();
+	current_one_cov/=divider;
+	current.setCovariance(current_one_cov);
+	x_ekf = ekf.update(current, current_measurement, time, use_mahalanobis, radius);
+
+      }
+
+
+
+
+
       
-      if (sw4[i] && sw1[i] && sw2[i]) {
-	x_ekf = ekf.update(mini_x_plus, mea_x_plus, time, use_mahalanobis, radius);
-	std::cout << "TO UPDATE X PLUS" << std::endl;
-	std::cout << mea_x_plus << std::endl;
-	if (count % 25 == 0) {
-	  char chh;
-	  //std::cin >> chh;
-	}
-      }
+      if (true) goto NO_DIST;
 
-      if (sw1[i] && sw2[i] && sw3[i]) {
-	x_ekf = ekf.update(mini_y_plus, mea_y_plus, time, use_mahalanobis, radius);
-	std::cout << "TO UPDATE Y PLUS" << std::endl;
-	std::cout << mea_y_plus << std::endl;
-	if (count % 25 == 0) {
-	  char chh;
-	  //std::cin >> chh;
-	}
-      }
-
-      if (sw2[i] && sw3[i] && sw4[i]) {
-	x_ekf = ekf.update(mini_x_minus, mea_x_minus, time, use_mahalanobis, radius);
-	std::cout << "TO UPDATE X MINUS" << std::endl;
-	std::cout << mea_x_minus << std::endl;
-
-	if (count % 25 == 0) {
-	  char chh;
-	  //	  std::cin >> chh;
-	}
-      }
-
-      if (sw3[i] && sw4[i] && sw1[i]) {
-	x_ekf = ekf.update(mini_y_minus, mea_y_minus, time, use_mahalanobis, radius);
-	std::cout << "TO UPDATE Y MINUS" << std::endl;
-	std::cout << mea_y_minus<< std::endl;
-	if (count % 25 == 0) {
-	  char chh;
-	  //std::cin >> chh;
-	}
-	
-      }
-
+      // // if (count < 30) x_ekf.yaw_bias() = 0;
     NO_DIST: int a = 5;
 
     }
@@ -521,3 +678,63 @@ int main() {
 //   x_ekf = ekf.update(sensor_left, left, time, true, 1);
 //   x_ekf = ekf.update(sensor_right, right, time, true, 1);
 // }
+
+
+      
+      
+      // if (sw4[i] && sw1[i] && sw2[i]) {
+      // 	x_ekf = ekf.update(mini_x_plus, mea_x_plus, time, use_mahalanobis, radius);
+      // 	std::cout << "TO UPDATE X PLUS" << std::endl;
+      // 	std::cout << mea_x_plus << std::endl;
+      // 	if (count % 25 == 0) {
+      // 	  char chh;
+      // 	  //std::cin >> chh;
+      // 	}
+      // }
+
+      // if (sw1[i] && sw2[i] && sw3[i]) {
+      // 	x_ekf = ekf.update(mini_y_plus, mea_y_plus, time, use_mahalanobis, radius);
+      // 	std::cout << "TO UPDATE Y PLUS" << std::endl;
+      // 	std::cout << mea_y_plus << std::endl;
+      // 	if (count % 25 == 0) {
+      // 	  char chh;
+      // 	  //std::cin >> chh;
+      // 	}
+      // }
+
+      // if (sw2[i] && sw3[i] && sw4[i]) {
+      // 	x_ekf = ekf.update(mini_x_minus, mea_x_minus, time, use_mahalanobis, radius);
+      // 	std::cout << "TO UPDATE X MINUS" << std::endl;
+      // 	std::cout << mea_x_minus << std::endl;
+
+      // 	if (count % 25 == 0) {
+      // 	  char chh;
+      // 	  //	  std::cin >> chh;
+      // 	}
+      // }
+
+      // if (sw3[i] && sw4[i] && sw1[i]) {
+      // 	x_ekf = ekf.update(mini_y_minus, mea_y_minus, time, use_mahalanobis, radius);
+      // 	std::cout << "TO UPDATE Y MINUS" << std::endl;
+      // 	std::cout << mea_y_minus<< std::endl;
+      // 	if (count % 25 == 0) {
+      // 	  char chh;
+      // 	  //std::cin >> chh;
+      // 	}
+	
+      // }
+
+
+      // if (sw1[i])
+      // 	x_ekf = ekf.update(sensor_one, sensor_one_measurement, time, use_mahalanobis, radius);
+
+      // if (sw2[i])
+      // 	x_ekf = ekf.update(sensor_two, sensor_two_measurement, time, use_mahalanobis, radius);
+
+      // if(sw3[i])
+      // 	x_ekf = ekf.update(sensor_three, sensor_three_measurement, time, use_mahalanobis, radius);
+
+      // if (sw4[i])
+      // 	x_ekf = ekf.update(sensor_four, sensor_four_measurement, time, use_mahalanobis, radius);
+
+

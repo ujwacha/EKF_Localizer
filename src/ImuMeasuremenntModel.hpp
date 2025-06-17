@@ -52,7 +52,7 @@ namespace Robot {
       M measurement;
       measurement.ax() = x.ax();
       measurement.ay() = x.ay();
-      //measurement.yaw() = x.theta();
+      measurement.yaw() = x.theta();
       measurement.yaw() = x.theta() + x.yaw_bias();
       return measurement;
     }

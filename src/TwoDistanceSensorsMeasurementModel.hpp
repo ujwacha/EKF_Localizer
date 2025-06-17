@@ -4,7 +4,6 @@
 #include <ostream>
 
 #include "kalman/LinearizedMeasurementModel.hpp"
-#include "Distance_Bet.hpp"
 
 #define PI 3.1415
 
@@ -83,6 +82,22 @@ namespace Robot {
       this->H(M::D2, S::X) = d2.calculate(x.x(), x.y(), x.theta()).dx;
       this->H(M::D2, S::Y) = d2.calculate(x.x(), x.y(), x.theta()).dy;
       this->H(M::D2, S::THETA) = d2.calculate(x.x(), x.y(), x.theta()).dtheta;
+
+
+      double value = 2.1;
+      
+      if ((fabs(this->H(M::D1, S::X)) + fabs(this->H(M::D1, S::Y))) > value)
+	this->V(M::D1, M::D1) = 600;
+      else 
+	this->V(M::D1, M::D1) = 1;
+
+      if ((fabs(this->H(M::D2, S::X)) + fabs(this->H(M::D2, S::Y))) > value)
+	this->V(M::D2, M::D2) = 600;
+      else 
+	this->V(M::D2, M::D2) = 1;
+
+
+
     }
   
   };
