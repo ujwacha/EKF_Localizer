@@ -35,8 +35,8 @@ namespace Robot {
     mutable RobotSensorKalman<T> d1;
 
  
-    DistanceSensorMeasurementModel(T angle1_, T r1_, T l_, T b_):
-      d1(angle1_, r1_, l_, b_)
+    DistanceSensorMeasurementModel(T angle1_, T r1_, T angle_b1, T l_, T b_):
+      d1(angle1_, r1_, angle_b1, l_, b_)
     {
       this->H.setIdentity();
       this->V.setIdentity();

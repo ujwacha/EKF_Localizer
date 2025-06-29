@@ -40,7 +40,7 @@ namespace Robot {
       this->H(M::AX, S::AX) = 1;
       this->H(M::AY, S::AY) = 1;
       this->H(M::YAW, S::THETA) = 1;
-      this->H(M::YAW, S::YAW_BIAS) = 1;
+      //this->H(M::YAW, S::YAW_BIAS) = 1;
       // Seti The Noise Covariance
       // this->V.set();
 
@@ -53,7 +53,7 @@ namespace Robot {
       measurement.ax() = x.ax();
       measurement.ay() = x.ay();
       measurement.yaw() = x.theta();
-      measurement.yaw() = x.theta() + x.yaw_bias();
+      //measurement.yaw() = x.theta() + x.yaw_bias();
       return measurement;
     }
 
@@ -61,7 +61,7 @@ namespace Robot {
       this->H.setZero();
 
       this->H(M::YAW, S::THETA) = 1;
-      this->H(M::YAW, S::YAW_BIAS) = 1;
+      //this->H(M::YAW, S::YAW_BIAS) = 1;
 
 
       // Row

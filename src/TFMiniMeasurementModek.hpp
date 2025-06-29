@@ -43,33 +43,37 @@ namespace Robot {
 
     mutable RobotSensorKalman<T> d1, d2, d3;
 
- 
-    TFMiniMeasurementModel(T angle1_, T r1_, T angle2_, T r2_, T angle3_, T r3_, T l_, T b_):
-      d1(angle1_, r1_, l_, b_),
-      d2(angle2_, r2_, l_, b_),
-      d3(angle3_, r3_, l_, b_)
+    TFMiniMeasurementModel(T angle1_, T r1_, T angle_b1,
+			   T angle2_, T r2_, T angle_b2,
+			   T angle3_, T r3_, T angle_b3,
+			   T l_, T b_)
+	: d1(angle1_, r1_, angle_b1, l_, b_),
+	  d2(angle2_, r2_, angle_b2, l_, b_),
+	  d3(angle3_, r3_, angle_b3, l_, b_)
     {
       this->H.setIdentity();
       this->V.setIdentity();
-
     }
-  
-    M h(const S& x) const {
+
+    M h(const S &x) const {
       M measurement;
 
-      #ifdef PRINT_DEBUG
+#ifdef PRINT_DEBUG
       std::cout << "KF THINKS: " << std::endl;
 
       std::cout << "x: " << x.x() << std::endl
-		<< "y: " << x.y() << std::endl
-		<< "th: " << x.theta() << std::endl << std::endl;
-      
-      std::cout 
-	<< "d1:" << d1.calculate(x.x(), x.y(), x.theta()).distance << std::endl
-	<< "d2:" << d2.calculate(x.x(), x.y(), x.theta()).distance << std::endl
-	<< "d2:" << d3.calculate(x.x(), x.y(), x.theta()).distance << std::endl
-	<< std::endl;
-      #endif
+                << "y: " << x.y() << std::endl
+                << "th: " << x.theta() << std::endl
+                << std::endl;
+
+      std::cout << "d1:" << d1.calculate(x.x(), x.y(), x.theta()).distance
+                << std::endl
+                << "d2:" << d2.calculate(x.x(), x.y(), x.theta()).distance
+                << std::endl
+                << "d2:" << d3.calculate(x.x(), x.y(), x.theta()).distance
+                << std::endl
+                << std::endl;
+#endif
 
       measurement.d1() = d1.calculate(x.x(), x.y(), x.theta()).distance;
       measurement.d2() = d2.calculate(x.x(), x.y(), x.theta()).distance;
@@ -78,8 +82,7 @@ namespace Robot {
       return measurement;
     }
 
-    void updateJacobians(const S& x, const double t = 0.05)
-    {
+    void updateJacobians(const S &x, const double t = 0.05) {
 
       // std::cout << "MINI UPDATE" << std::endl;
 
@@ -96,30 +99,22 @@ namespace Robot {
       this->H(M::D3, S::Y) = d3.calculate(x.x(), x.y(), x.theta()).dy;
       this->H(M::D3, S::THETA) = d3.calculate(x.x(), x.y(), x.theta()).dtheta;
 
-
-
       double value = 2.1;
-      
+
       if ((fabs(this->H(M::D1, S::X)) + fabs(this->H(M::D1, S::Y))) > value)
-	this->V(M::D1, M::D1) = 600;
-      else 
-	this->V(M::D1, M::D1) = 1;
+        this->V(M::D1, M::D1) = 600;
+      else
+        this->V(M::D1, M::D1) = 1;
 
       if ((fabs(this->H(M::D2, S::X)) + fabs(this->H(M::D2, S::Y))) > value)
-	this->V(M::D2, M::D2) = 600;
-      else 
-	this->V(M::D2, M::D2) = 1;
-
+        this->V(M::D2, M::D2) = 600;
+      else
+        this->V(M::D2, M::D2) = 1;
 
       if ((fabs(this->H(M::D3, S::X)) + fabs(this->H(M::D3, S::Y))) > value)
-	this->V(M::D3, M::D3) = 600;
-      else 
-	this->V(M::D3, M::D3) = 1;
-
-
-
-
+        this->V(M::D3, M::D3) = 600;
+      else
+        this->V(M::D3, M::D3) = 1;
     }
-  
   };
-}
+  } // namespace Robot

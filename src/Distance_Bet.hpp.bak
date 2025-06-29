@@ -4,7 +4,7 @@
 
 template <typename T> class RobotSensorKalman {
 private:
-  T l, b, r, a, ra;       // Environment and robot parameters
+  T l, b, r, a;       // Environment and robot parameters
   const T eps = 1e-6; // For numerical stability
 
   // Structure to hold both distance and derivatives
@@ -24,19 +24,12 @@ private:
   }
 
 public:
-  RobotSensorKalman(T angle_to_cir, T radius_to_cir, T angle, T length , T breadth)
-    : l(length), b(breadth), r(radius_to_cir), a(angle), ra(angle_to_cir) {}
+  RobotSensorKalman(T angle, T radius , T length , T breadth)
+    : l(length), b(breadth), r(radius), a(angle) {}
 
   SensorResult calculate(T x, T y, T theta_s) {
     SensorResult result;
-    T theta_b = normalizeAngle(theta_s + ra);
     theta_s = normalizeAngle(theta_s + a);
-
-    // from this we need to change the values of x and y
-    // to represent the place where x and y exist
-
-    T x_n = x + r*std::cos(theta_b);
-    T y_n = y + r*std::sin(theta_b);
 
     // print_res(result);
 
@@ -46,46 +39,38 @@ public:
     // std::cout << "DISTANCE{x: " << x << ", y: " << y << ", theta_s: " << theta_s << " } : " <<  std::endl;
 
     //Calculate angles to boundaries
-    const T theta = std::atan2(y_n, x_n);
-    const T beta = std::atan2(y_n, b - x_n);
-    const T alpha = std::atan2(l - y_n, b - x_n);
-    const T gamma = std::atan2(l - y_n, x_n);
+    const T theta = std::atan2(y, x);
+    const T beta = std::atan2(y, b - x);
+    const T alpha = std::atan2(l - y, b - x);
+    const T gamma = std::atan2(l - y, x);
 
 
 
     // Determine which edge we're facing
     if (-beta <= theta_s && theta_s <= alpha) { // Right edge
-      result.distance = (b - x_n) / std::cos(theta_s);
-      result.dx = -1.0 / std::cos(theta_s);
+      result.distance = (b - x) / (std::cos(theta_s) + eps) - r;
+      result.dx = -1.0 / (std::cos(theta_s) + eps);
       result.dy = 0.0;
       result.dtheta = (b - x) * std::sin(theta_s) /
                       (std::cos(theta_s) * std::cos(theta_s) + eps);
-      result.dtheta -= r*std::sin(theta_s - theta_b)/(std::cos(theta_s) * std::cos(theta_s) + eps);
-
     } else if (alpha <= theta_s && theta_s <= M_PI - gamma) { // Top edge
-      result.distance = (l - y_n) / std::sin(theta_s);
+      result.distance = (l - y) / (std::sin(theta_s) + eps) - r;
       result.dx = 0.0;
-      result.dy = -1.0 / std::sin(theta_s);
+      result.dy = -1.0 / (std::sin(theta_s) + eps);
       result.dtheta = -(l - y) * std::cos(theta_s) /
                       (std::sin(theta_s) * std::sin(theta_s) + eps);
-      result.dtheta -= r*std::sin(theta_s - theta_b)/(std::sin(theta_s) * std::sin(theta_s) + eps);
-
     } else if (-M_PI + theta <= theta_s && theta_s <= -beta) { // Bottom edge
-      result.distance = -y_n / std::sin(theta_s);
+      result.distance = -y / (std::sin(theta_s) + eps) - r;
       result.dx = 0.0;
-      result.dy = -1.0 / std::sin(theta_s);
+      result.dy = -1.0 / (std::sin(theta_s) + eps);
       result.dtheta =
           y * std::cos(theta_s) / (std::sin(theta_s) * std::sin(theta_s) + eps);
-      result.dtheta -= r*std::sin(theta_s - theta_b)/(std::sin(theta_s) * std::sin(theta_s) + eps);
-
     } else { // Left edge
-      result.distance = -x_n / std::cos(theta_s);
-      result.dx = -1.0 / std::cos(theta_s);
+      result.distance = -x / (std::cos(theta_s) + eps) - r;
+      result.dx = -1.0 / (std::cos(theta_s) + eps);
       result.dy = 0.0;
       result.dtheta = -x * std::sin(theta_s) /
                       (std::cos(theta_s) * std::cos(theta_s) + eps);
-      result.dtheta -= r*std::sin(theta_s - theta_b)/(std::cos(theta_s) * std::cos(theta_s) + eps);
-
     }
 
     // print_res(result);
